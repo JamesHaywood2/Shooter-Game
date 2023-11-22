@@ -5,6 +5,7 @@ local soundTable = require("soundTable")
 local enemy = require("objects.Enemy_Base")
 local square = require("objects.Enemy_1")
 local triangle = require("objects.Enemy_2")
+local fish = require("objects.Boss")
 
 
 physics.start()
@@ -302,14 +303,43 @@ function scene:show( event )
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
 
-      --add an enemy as a test
-      local enemy1 = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-      enemy1:spawn()
-      enemy1:move()
-   
-      local enemy2 = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-      enemy2:spawn()
-      enemy2:move(PC.x, PC.y)
+      -- Spawns two enemies, type randomly chosen
+      -- Clumsy implementation, could change later -- Lilli
+      function spawnEnemies()
+         -- Spawn first enemy
+         randomNumber = math.random()
+         if randomNumber < 0.5 then
+            local squareEnemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+            squareEnemy:spawn()
+            squareEnemy:move()
+         else
+            local polyEnemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+            polyEnemy:spawn()
+            polyEnemy:move(PC.x, PC.y)
+         end
+
+         -- Spawn second enemy
+         randomNumber = math.random()
+         if randomNumber < 0.5 then
+            local squareEnemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+            squareEnemy:spawn()
+            squareEnemy:move()
+         else
+            local polyEnemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+            polyEnemy:spawn()
+            polyEnemy:move(PC.x, PC.y)
+         end
+      end
+      local spawnTimer = timer.performWithDelay(3000,spawnEnemies,-1) -- Spawn regular intervals, doesn't stop
+
+      -- Boss will enter after two mintues of playing
+      function enterBoss()
+         timer.cancel(spawnTimer)
+         local boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+         boss:spawn()
+         boss:move()
+      end
+      timer.performWithDelay(120000,enterBoss,1) -- Boss will only enter once
    end
 end
  
