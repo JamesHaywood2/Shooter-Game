@@ -202,6 +202,12 @@ function scene:create( event )
    sceneGroup:insert( gameOverText )
    gameOverText.isVisible = false;
 
+   --Congratulations Text
+   congratsText = display.newText( "CONTRATULATIONS, YOU WIN", display.contentCenterX, display.contentCenterY, native.systemFont, 64 )
+   congratsText:setFillColor(0,1,0)
+   congratsText:toFront();
+   sceneGroup:insert( congratsText )
+   congratsText.isVisible = false;
 
    --Add kill zones for projectiles and enemies
    --Wall off the screen to the right.
@@ -232,7 +238,7 @@ function scene:create( event )
    killZoneL.collision = onLocalCollision;
    killZoneL:addEventListener( "collision" );
 
-
+   composer.setVariable("bossDefeated",false);
 
    
 end
@@ -249,9 +255,11 @@ function scene:show( event )
       --Reset the player's HP and score.
       playerHP = 5;
       composer.setVariable("Score", 0);
+      composer.setVariable("bossDefeated",false);
 
       --GameOver text should be invisible.
       gameOverText.isVisible = false;
+      congratsText.isVisible = false;
       --PC should be visible.
       PC.isVisible = true;
 
@@ -294,9 +302,9 @@ function scene:show( event )
          local boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
          boss:spawn()
          boss:move()
+         sceneGroup:insert(boss.shape)
       end
       timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
-
 
    end
 end
@@ -400,18 +408,20 @@ function enterFrame()
    print("Enemy table size: " .. #enemyTable)
 
    --If the player's HP is 0, display the game over text.
-   if (playerHP <= 0 and gameRunning == true) then
-      gameOverText.isVisible = true;
+   if (playerHP <= 0 and gameRunning == true) or (composer.getVariable("bossDefeated") == true) then
+      if composer.getVariable("bossDefeated") == true then
+         congratsText.isVisible = true;
+      else 
+         gameOverText.isVisible = true;
+
+         --cancel the spawn timer
+         timer.cancel(spawnTimer)
+      end
       gameRunning = false;
 
       --Make the player disappear.
       PC.isVisible = false;
       
-      --cancel the spawn timer
-      timer.cancel(spawnTimer)
-
-
-
       --If you tap the screen in this state, it should go back to the title screen.
       --Same method should work for the boss kill.
       local function goBackToTitle(event)

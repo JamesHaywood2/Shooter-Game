@@ -2,6 +2,7 @@
 -- I'm not 100% sure what that means so I'm just doing this for now -- Lilli
 local Enemy = require("objects.Enemy_Base");
 local soundTable=require("soundTable");
+local composer = require("composer");
 local physics = require("physics");
 
 local Boss = Enemy:new( {HP=30} );
@@ -49,11 +50,11 @@ function Boss:spawn()
     self.shape.AnchorX, self.shape.AnchorY = 0.5, 0.5
     self.shape.x = display.actualContentWidth
     self.shape.y = display.contentCenterY
-    self.shape.xScale = 1.5
-    self.shape.yScale = 1.5
+    self.shape.xScale = 2.5
+    self.shape.yScale = 2.5
 
     --Add the mouth
-    local mouth = display.newSprite(self.shape, fishSheet, fishSeqData)
+    mouth = display.newSprite(self.shape, fishSheet, fishSeqData)
     mouth:setSequence("mouthOn")
     mouth:toBack()
     mouth.anchorX, mouth.anchorY = 1, 0 --Set the anchor point to the top right corner of the mouth
@@ -61,13 +62,13 @@ function Boss:spawn()
     mouth.xScale, mouth.yScale = 1.032, 1.042 --The mouth didn't fit on the fish's body perfectly so I stretched it a super small ammount to make it fit.
    
     --Add the caudal fin
-    local cFin = display.newSprite(self.shape, fishSheet, fishSeqData)
+    cFin = display.newSprite(self.shape, fishSheet, fishSeqData)
     cFin:setSequence("cFinOn")
     cFin.anchorX, cFin.anchorY = 0, 0.5
     cFin.x, cFin.y = 76, -3
 
     --Add the pectoral fin
-    local pFin = display.newSprite(self.shape, fishSheet, fishSeqData)
+    pFin = display.newSprite(self.shape, fishSheet, fishSeqData)
     pFin:setSequence("pFinOn")
     pFin:toBack()
     pFin.anchorX, pFin.anchorY = 0, 0 --Anchor point is the top left corner of the fin
@@ -91,10 +92,15 @@ function Boss:spawn()
     physics.addBody(self.shape, "kinematic"); 
 end
 
--- Boss movingly around randomly has not been implemented yet
--- Move function from Enemy1
 function Boss:move()
-    local speed = 200;
+
+    -- Moves to a random position on the screen
+    local function singleMove()
+        transition.to(self.shape,{time=2000,x=math.random(display.contentCenterX-100,display.actualContentWidth-100),y=math.random(50,display.actualContentHeight-100) }) 
+    end
+    movingTimer = timer.performWithDelay(2000,singleMove,-1) -- repeatedly move
+
+    local speed = 100;
     self.shape:setLinearVelocity(-speed, 0);
 end
 
@@ -105,9 +111,9 @@ function Boss:hit()
         return 0;
 	else 
 		audio.play( soundTable["explodeSound"] );
-		
         transition.cancel( self.shape );
-		
+        transition.cancel(movingTimer)
+        
 		if (self.timerRef ~= nil) then
 			timer.cancel ( self.timerRef );
 		end
@@ -116,8 +122,11 @@ function Boss:hit()
 		self.shape:removeSelf();
 		self.shape=nil;	
 		--self = nil;
+
+        -- Acknowledge boss has been destroyed
+        composer.setVariable("bossDefeated",true);
     
-        --Boss destroyed, increase score
+        --increase score
         composer.setVariable( "Score", composer.getVariable( "Score" ) + 10E3 )
 
         return 1;
