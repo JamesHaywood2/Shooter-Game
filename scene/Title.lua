@@ -38,7 +38,7 @@ function scene:create( event )
       cornerRadius = 25,
       onEvent = function(event)
          if (event.phase == "ended") then
-            composer.gotoScene("scene.Game2");
+            composer.gotoScene("scene.Game");
          end
       end
    })

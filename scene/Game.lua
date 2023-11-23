@@ -11,6 +11,7 @@ local fish = require("objects.Boss")
 physics.start()
 physics.setGravity(0,0);
  
+ 
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
 -- unless "composer.removeScene()" is called.
@@ -19,40 +20,44 @@ physics.setGravity(0,0);
 -- local forward references should go here
  
 ---------------------------------------------------------------------------------
-
+ 
 -- "scene:create()"
 function scene:create( event )
  
    local sceneGroup = self.view
- 
+
    -- Initialize the scene here.
    -- Example: add display objects to "sceneGroup", add touch listeners, etc.
 
-   PC = nil
+   gameRunning = false;
+
+   enemyTable = {}
+
+
 
    --Add scrolling background
-   local bg1
-   local bg2
-   local bg3
-   local runtime = 0
-   local scrollSpeed = 1.4 --1.4
+   --bg display group
+   local bgGroup = display.newGroup()
+   sceneGroup:insert( bgGroup )
+   runtime = 0
+   scrollSpeed = 1.4 --1.4
 
-   local bgS1
-   local bgS2
-   local bgS3
-   local scrollSpeed2 = 5
+   bgS1 = nil
+   bgS2 = nil
+   bgS3 = nil
+   scrollSpeed2 = 5
 
-   local function addScrollableBg()
+   function addScrollableBg()
       --Again this just condenses the code. I think it makes it a little easier to read. - James
       local function makeBG(image, xPos)
          local bg = display.newRect(0, 0, display.contentWidth, display.actualContentHeight)
-         sceneGroup:insert( bg )
+         bgGroup:insert(bg)
          bg.fill = image
          bg.x = xPos
          bg.y = display.contentCenterY
          return bg
       end
-
+   
       local bgImage = { type="image", filename="farback.png" }
       --Add first bg image in the center
       bg1 = makeBG(bgImage, display.contentCenterX)
@@ -60,7 +65,7 @@ function scene:create( event )
       bg2 = makeBG(bgImage, display.contentCenterX - display.actualContentWidth + 250)
       --Add third bg image. This should be in front of the first one
       bg3 = makeBG(bgImage, display.contentCenterX + display.actualContentWidth - 250)
-
+   
       local bgImage2 = { type="image", filename="starfield.png" }
       --Add first bg image in the center
       bgS1 = makeBG(bgImage2, display.contentCenterX)
@@ -68,99 +73,14 @@ function scene:create( event )
       bgS2 = makeBG(bgImage2, display.contentCenterX - display.actualContentWidth + 250)
       --Add third bg image. This should be in front of the first one
       bgS3 = makeBG(bgImage2, display.contentCenterX + display.actualContentWidth - 250)
-
    end
 
-   local function moveBg(dt)
-      --This just condenses code and makes it easier to read imo - James.
-      local function move(bg, scrollSpeed)
-         bg.x = bg.x + scrollSpeed * dt
-
-         if (bg.x - display.contentWidth/2.5) > display.actualContentWidth then
-            bg:translate(-bg.contentWidth * 2.8 , 0)
-         end
-      end
-
-      move(bg1, scrollSpeed)
-      move(bg2, scrollSpeed)
-      move(bg3, scrollSpeed)
-
-      move(bgS1, scrollSpeed2)
-      move(bgS2, scrollSpeed2)
-      move(bgS3, scrollSpeed2)
-   end
-
-   local function getDeltaTime()
-      local temp = system.getTimer()
-      local dt = (temp-runtime) / (1000/60)
-      runtime = temp
-      return dt
-   end
-
-   --This gets called every frame. Use this as the main game loop I guess.
-   local function enterFrame()
-      local dt = getDeltaTime()
-      moveBg(dt)
-   end
-   
    addScrollableBg()
    Runtime:addEventListener("enterFrame", enterFrame)
 
-   --- Arena
-   --I don't think top and bottom are needed. May remove them later. - James.
-   local top = display.newRect(0, -20, display.contentWidth, 20);
-   local left = display.newRect(-200, 0, 20, display.contentHeight);
-   local right = display.newRect(display.actualContentWidth+100, 0, 20, display.contentHeight);
-   local bottom = display.newRect(0, display.contentHeight, display.contentWidth, 20);
-   sceneGroup:insert( top )
-   sceneGroup:insert( left )
-   sceneGroup:insert( right )
-   sceneGroup:insert( bottom )
-
-   top.anchorX = 0;top.anchorY = 0;
-   left.anchorX = 0;left.anchorY = 0;
-   right.anchorX = 0;right.anchorY = 0;
-   bottom.anchorX = 0;bottom.anchorY = 0;
-
-   physics.addBody( bottom, "dynamic", {isSensor=true} );
-   physics.addBody( left, "dynamic", {isSensor=true} );
-   physics.addBody( right, "dynamic", {isSensor=true} );
-   physics.addBody( top, "dynamic", {isSensor=true});
-
-   --Anything that collides with the back wall would be off the screen and should be destroyed.
-   local function onLocalCollision( self, event )
-      if (event.phase == "began") then
-         event.other:removeSelf();
-         event.other = nil;
-      end
-   end
-   left.collision = onLocalCollision;
-   left:addEventListener( "collision" );
-
-   ---Score
-   ScoreText = display.newText( "Score: 0", display.contentCenterX + 200, 25, native.systemFont, 45 )
-   ScoreText:setFillColor(0.03,0.7,0)
-   composer.setVariable("Score", 0);
-   sceneGroup:insert( ScoreText )
-
-   --HP
-   HPText = display.newText( "HP: 5", display.contentCenterX - 200, 25, native.systemFont, 45 )
-   HPText:setFillColor(0.9,0.1,0.1)
-   composer.setVariable( "playerHP", 5 );
-   sceneGroup:insert( HPText )
-
-   gameOverText = display.newText( "Game Over", display.contentCenterX, display.contentCenterY, native.systemFont, 64 )
-   gameOverText:setFillColor(1,0,0)
-   gameOverText:toFront();
-   sceneGroup:insert( gameOverText )
-   gameOverText.isVisible = false;
-
-   --Controller
-   controlBar = display.newRect (-50, display.contentCenterY, 200, display.contentHeight);
-   controlBar:setFillColor(1,1,1,0.5);
-   sceneGroup:insert( controlBar )
-
+   --Add player character
    ---- Main Player
+   playerHP = 5;
    PC = display.newCircle (75, display.contentCenterY, 25);
    PC.tag = "player";
    physics.addBody (PC, "dynamic", {isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
@@ -171,7 +91,7 @@ function scene:create( event )
          if (event.other.tag == "enemy") then
             event.other:removeSelf();
             event.other = nil;
-            composer.setVariable( "playerHP", composer.getVariable( "playerHP" ) - 1 ) --I forgot if I had a good reason to do this.
+            playerHP = playerHP - 1;
             --Play a sound when the player is hit.
          end
          --Can include other collision events here.
@@ -179,55 +99,67 @@ function scene:create( event )
    end
    PC.collision = onLocalCollision;
    PC:addEventListener( "collision" );
+   sceneGroup:insert(PC);
 
-   sceneGroup:insert( PC )
-
+   --Controller
+   controlBar = display.newRect (-50, display.contentCenterY, 200, display.contentHeight);
+   controlBar:setFillColor(1,1,1,0.5);
+   sceneGroup:insert( controlBar )
    local function move ( event )
-      if event.phase == "began" then		
-         PC.markY = PC.y 
-      elseif event.phase == "moved" then	 	
-         local y = (event.y - event.yStart) + PC.markY	 	
-         
-         if (y <= 20 + PC.height/2) then
-            PC.y = 20+PC.height/2;
-         elseif (y >= display.contentHeight-20-PC.height/2) then
-            PC.y = display.contentHeight-20-PC.height/2;
-         else
-            PC.y = y;		
+      if (gameRunning) then
+         if event.phase == "began" then		
+            PC.markY = PC.y 
+         elseif event.phase == "moved" then	 	
+            local y = (event.y - event.yStart) + PC.markY	 	
+            
+            if (y <= 20 + PC.height/2) then
+               PC.y = 20+PC.height/2;
+            elseif (y >= display.contentHeight-20-PC.height/2) then
+               PC.y = display.contentHeight-20-PC.height/2;
+            else
+               PC.y = y;		
+            end
+   
          end
-
       end
       return false;
-
    end
    controlBar:addEventListener("touch", move);
 
    -- Projectile 
    local cnt = 0;
    function fire (event) 
-      if (cnt < 3) then
-         cnt = cnt+1;
-         local p = display.newCircle (PC.x+50, PC.y, 15);
-         sceneGroup:insert( p )
-         p.anchorY = 1;
-         p:setFillColor(0,1,0);
-         physics.addBody (p, "dynamic", {radius=5} );
-         p:applyForce(2, 0, p.x, p.y);
-
-         audio.play( soundTable["shootSound"] );
-
-         local function removeProjectile (event)
-            if (event.phase=="began") then
-               event.target:removeSelf();
-               event.target=nil;
-               cnt = cnt - 1;
-
-               if (event.other.tag == "enemy") then
-                  event.other.pp:hit();
+      if (gameRunning) then
+         if (cnt < 3) then
+            cnt = cnt+1;
+            local p = display.newCircle (PC.x+50, PC.y, 15);
+            sceneGroup:insert( p )
+            p.anchorY = 1;
+            p:setFillColor(0,1,0);
+            physics.addBody (p, "dynamic", {radius=5} );
+            p:applyForce(2, 0, p.x, p.y);
+   
+            audio.play( soundTable["shootSound"] );
+   
+            local function removeProjectile (event)
+               if (event.phase=="began") then
+                  event.target:removeSelf();
+                  event.target=nil;
+                  cnt = cnt - 1;
+                  --If the projectile hits an enemy, trigger the enemy's hit function.
+                  if (event.other.tag == "enemy") then
+                     local isDead = event.other.pp:hit();
+                     if (isDead == 1) then
+                        local indexOfEnemy = table.indexOf(enemyTable, event.other)
+                        table.remove(enemyTable, indexOfEnemy)
+                        event.other:removeSelf();
+                        event.other = nil;
+                     end
+                  end
                end
             end
+            p:addEventListener("collision", removeProjectile);
          end
-         p:addEventListener("collision", removeProjectile);
       end
       return false;
    end
@@ -239,15 +171,70 @@ function scene:create( event )
          if (event.keyName == "f") then
             fire();
          elseif (event.keyName == "up") then
-            composer.setVariable( "playerHP", composer.getVariable( "playerHP" ) + 1 )
+            print("HP UP: " .. playerHP .. " -> " .. playerHP + 1)
+            playerHP = playerHP + 1;
          elseif (event.keyName == "down") then
-            composer.setVariable( "playerHP", composer.getVariable( "playerHP" ) - 1 )
+            print("HP DOWN: " .. playerHP .. " -> " .. playerHP - 1)
+            playerHP = playerHP - 1;
          end
       end
 
       return false;
    end
    Runtime:addEventListener( "key", KeyHandler );
+
+   --HUD
+   ---Score
+   ScoreText = display.newText( "Score: 0", display.contentCenterX + 200, 25, native.systemFont, 45 )
+   ScoreText:setFillColor(0.03,0.7,0)
+   composer.setVariable("Score", 0);
+   sceneGroup:insert( ScoreText )
+
+   --HP
+   HPText = display.newText( "HP: 5", display.contentCenterX - 200, 25, native.systemFont, 45 )
+   HPText:setFillColor(0.9,0.1,0.1)
+   sceneGroup:insert( HPText )
+
+   --Game Over Text
+   gameOverText = display.newText( "Game Over", display.contentCenterX, display.contentCenterY, native.systemFont, 64 )
+   gameOverText:setFillColor(1,0,0)
+   gameOverText:toFront();
+   sceneGroup:insert( gameOverText )
+   gameOverText.isVisible = false;
+
+
+   --Add kill zones for projectiles and enemies
+   --Wall off the screen to the right.
+   local killZoneR = display.newRect(display.contentWidth + 150, display.contentCenterY, 100, display.contentHeight);
+   killZoneR:setFillColor(1,0,0,0.5);
+   physics.addBody (killZoneR, "dynamic", {isSensor=true});
+   sceneGroup:insert(killZoneR);
+
+   --Wall off the screen to the left. This is for the enemies
+   local killZoneL = display.newRect(-150, display.contentCenterY, 100, display.contentHeight);
+   killZoneL:setFillColor(1,0,0,0.5);
+   physics.addBody (killZoneL, "dynamic", {isSensor=true});
+   sceneGroup:insert(killZoneL);
+
+   --Really just need to check for the enemies hitting the kill zone. Projectiles destroy themselves regardless.
+   local function onLocalCollision( self, event )
+      if (event.phase == "began") then
+         print("Collision with kill zone")
+         if (event.other.tag == "enemy") then
+            local indexOfEnemy = table.indexOf(enemyTable, event.other)
+            table.remove(enemyTable, indexOfEnemy)
+            event.other:removeSelf();
+            event.other = nil;
+         end
+         --Can include other collision events here.
+      end
+   end
+   killZoneL.collision = onLocalCollision;
+   killZoneL:addEventListener( "collision" );
+
+
+
+   
 end
  
 -- "scene:show()"
@@ -258,53 +245,49 @@ function scene:show( event )
  
    if ( phase == "will" ) then
       -- Called when the scene is still off screen (but is about to come on screen).
+
+      --Reset the player's HP and score.
+      playerHP = 5;
+      composer.setVariable("Score", 0);
+
+      --GameOver text should be invisible.
+      gameOverText.isVisible = false;
+      --PC should be visible.
+      PC.isVisible = true;
+
+
    elseif ( phase == "did" ) then
       -- Called when the scene is now on screen.
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
 
-      --Reset score and HP
-      composer.setVariable( "Score", 0 );
-      composer.setVariable( "playerHP", 5 );
+      gameRunning = true;
+      --Start the updater
+      Runtime:addEventListener("enterFrame", enterFrame)
 
-      --start update loop
-      Runtime:addEventListener("enterFrame", update)
-
-      -- Spawns two enemies, type randomly chosen
-      -- Clumsy implementation, could change later -- Lilli
+      --Spawn enemies
       function spawnEnemies()
-         -- Spawn first enemy
-         randomNumber = math.random()
-         if randomNumber < 0.5 then
-            local squareEnemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-            squareEnemy:spawn()
-            squareEnemy:move()
-            sceneGroup:insert( squareEnemy.shape )
-         else
-            local polyEnemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-            polyEnemy:spawn()
-            polyEnemy:move(PC.x, PC.y)
-            sceneGroup:insert( polyEnemy.shape )
-         end
-
-         local spawnNumber = math.random(1,2)
-         for i=1,spawnNumber do
-            randomNumber = math.random()
-            if randomNumber < 0.5 then
-               local enemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+         local spawnNum = math.random(1,2)
+         for i=1, spawnNum do
+            local RNG = math.random();
+            local enemy = nil;
+            if (RNG < 0.5) then
+               enemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
                enemy:spawn()
                enemy:move()
-               sceneGroup:insert( enemy.shape )
             else
-               local enemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+               enemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
                enemy:spawn()
                enemy:move(PC.x, PC.y)
-               sceneGroup:insert( enemy.shape )
             end
+            table.insert( enemyTable, enemy )
+            sceneGroup:insert( enemy.shape )
          end
+
       end
       spawnTimer = timer.performWithDelay(3E3,spawnEnemies,-1) -- Spawn regular intervals, doesn't stop
 
+      
       -- Boss will enter after two mintues of playing
       function enterBoss()
          timer.cancel(spawnTimer)
@@ -313,6 +296,8 @@ function scene:show( event )
          boss:move()
       end
       timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+
+
    end
 end
  
@@ -327,14 +312,25 @@ function scene:hide( event )
       -- Insert code here to "pause" the scene.
       -- Example: stop timers, stop animation, stop audio, etc.
 
-      --Stop the spawnTimer
+      gameRunning = false;
+      --Stop the updater
+      Runtime:removeEventListener("enterFrame", enterFrame)
+
+      --Cancel the spawn timer
       timer.cancel(spawnTimer)
+
+      --Clear the enemy table
+      for i = #enemyTable, 1, -1 do
+         local enemy = enemyTable[i]
+         display.remove(enemy.shape)
+         enemy = nil
+         table.remove(enemyTable, i)
+      end
+
+
    elseif ( phase == "did" ) then
       -- Called immediately after scene goes off screen.
       
-      --Right after you leave the game screen to go back to the title screen, the game screen is destroyed.
-      --This should then reset the game screen when you go back to it. - James
-      composer.removeScene("scene.Game");
    end
 end
  
@@ -347,12 +343,7 @@ function scene:destroy( event )
    -- Insert code here to clean up the scene.
    -- Example: remove display objects, save state, etc.
 
-   --Delete everything in sceneGroup
-   for i=sceneGroup.numChildren,1,-1 do
-      local child = sceneGroup[i]
-      child.parent:remove( child )
-      child = nil
-   end
+
 end
  
 ---------------------------------------------------------------------------------
@@ -366,46 +357,72 @@ scene:addEventListener( "destroy", scene )
 ---------------------------------------------------------------------------------
 
 
---Game loop function
-function update()
-   -- --Update score
-   ScoreText.text = "Score: " .. composer.getVariable( "Score" );
-   -- --Update HP
-   local playerHP = composer.getVariable( "playerHP" )
-   HPText.text = "HP: " .. playerHP;
+local function moveBg(dt)
+   --This just condenses code and makes it easier to read imo - James.
+   local function move(bg, scrollSpeed)
+      bg.x = bg.x + scrollSpeed * dt
 
-   --Check if the player is dead. If so, pause the game and display a game over message.
-   --Pausing the game should pause the physics and set scrollSpeeds to 0.
-   if (playerHP <= 0) then
-      physics.pause();
-      scrollSpeed = 0;
-      scrollSpeed2 = 0;
+      if (bg.x - display.contentWidth/2.5) > display.actualContentWidth then
+         bg:translate(-bg.contentWidth * 2.8 , 0)
+      end
+   end
 
-      --Remove event listeners
-      Runtime:removeEventListener("enterFrame", enterFrame)
-      Runtime:removeEventListener("tap", fire)
-      Runtime:removeEventListener("key", KeyHandler)
-      
-      --Display game over message
+   move(bg1, scrollSpeed)
+   move(bg2, scrollSpeed)
+   move(bg3, scrollSpeed)
+
+   move(bgS1, scrollSpeed2)
+   move(bgS2, scrollSpeed2)
+   move(bgS3, scrollSpeed2)
+end
+
+function getDeltaTime()
+   local temp = system.getTimer()
+   local dt = (temp-runtime) / (1000/60)
+   runtime = temp
+   return dt
+end
+
+--This gets called every frame. Use this as the main game loop I guess.
+function enterFrame()
+   
+   if (gameRunning) then
+      local dt = getDeltaTime()
+      moveBg(dt)
+
+      --Update the score and HP text.
+      ScoreText.text = "Score: " .. composer.getVariable( "Score" )
+      HPText.text = "HP: " .. playerHP
+
+   end
+
+   --Print enemy table size
+   print("Enemy table size: " .. #enemyTable)
+
+   --If the player's HP is 0, display the game over text.
+   if (playerHP <= 0 and gameRunning == true) then
       gameOverText.isVisible = true;
+      gameRunning = false;
 
-      --Set PC color to red
-      PC:setFillColor(1,0,0);
+      --Make the player disappear.
+      PC.isVisible = false;
+      
+      --cancel the spawn timer
+      timer.cancel(spawnTimer)
 
-      --Disable the controller
-      controlBar.isVisible = false;
+
 
       --If you tap the screen in this state, it should go back to the title screen.
       --Same method should work for the boss kill.
       local function goBackToTitle(event)
          if (event.phase == "ended") then
+            Runtime:removeEventListener("touch", goBackToTitle)
             composer.gotoScene("scene.Title");
             print("Going to title");
          end
       end
       Runtime:addEventListener("touch", goBackToTitle)
-      return false;
    end
 end
-
+ 
 return scene
