@@ -1,6 +1,7 @@
 -- Project Description says that the Boss is supposed to extend functionality of Enemy class
 -- I'm not 100% sure what that means so I'm just doing this for now -- Lilli
 local Enemy = require("objects.Enemy_Base");
+local soundTable=require("soundTable");
 local physics = require("physics");
 
 local Boss = Enemy:new( {HP=30} );
@@ -95,6 +96,32 @@ end
 function Boss:move()
     local speed = 200;
     self.shape:setLinearVelocity(-speed, 0);
+end
+
+function Boss:hit()
+    self.HP = self.HP - 1
+    if (self.HP > 0) then 
+		audio.play( soundTable["hitSound"] );
+        return 0;
+	else 
+		audio.play( soundTable["explodeSound"] );
+		
+        transition.cancel( self.shape );
+		
+		if (self.timerRef ~= nil) then
+			timer.cancel ( self.timerRef );
+		end
+
+		-- die
+		self.shape:removeSelf();
+		self.shape=nil;	
+		--self = nil;
+    
+        --Boss destroyed, increase score
+        composer.setVariable( "Score", composer.getVariable( "Score" ) + 10E3 )
+
+        return 1;
+	end		
 end
 
 return Boss;
