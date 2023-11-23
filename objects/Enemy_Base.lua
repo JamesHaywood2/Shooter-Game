@@ -58,6 +58,7 @@ function Enemy:hit ()
 	if (self.HP > 0) then 
 		audio.play( soundTable["hitSound"] );
 		self.shape:setFillColor(0.5,0.5,0.5);
+    return 0;
 	
 	else 
 		audio.play( soundTable["explodeSound"] );
@@ -75,6 +76,8 @@ function Enemy:hit ()
     
     --Increase score
     composer.setVariable( "Score", composer.getVariable( "Score" ) + 100 )
+
+    return 1;
 	end		
 end
 

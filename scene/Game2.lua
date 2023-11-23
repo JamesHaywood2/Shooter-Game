@@ -148,7 +148,13 @@ function scene:create( event )
                   cnt = cnt - 1;
                   --If the projectile hits an enemy, trigger the enemy's hit function.
                   if (event.other.tag == "enemy") then
-                     event.other.pp:hit();
+                     local isDead = event.other.pp:hit();
+                     if (isDead == 1) then
+                        local indexOfEnemy = table.indexOf(enemyTable, event.other)
+                        table.remove(enemyTable, indexOfEnemy)
+                        event.other:removeSelf();
+                        event.other = nil;
+                     end
                   end
                end
             end
@@ -215,6 +221,8 @@ function scene:create( event )
       if (event.phase == "began") then
          print("Collision with kill zone")
          if (event.other.tag == "enemy") then
+            local indexOfEnemy = table.indexOf(enemyTable, event.other)
+            table.remove(enemyTable, indexOfEnemy)
             event.other:removeSelf();
             event.other = nil;
          end
