@@ -29,7 +29,6 @@ function scene:create( event )
    -- Example: add display objects to "sceneGroup", add touch listeners, etc.
 
    PC = nil
-   local controlBar
 
    --Add scrolling background
    local bg1
@@ -102,47 +101,6 @@ function scene:create( event )
    local function enterFrame()
       local dt = getDeltaTime()
       moveBg(dt)
-
-      -- --Update score
-      ScoreText.text = "Score: " .. composer.getVariable( "Score" );
-      -- --Update HP
-      local playerHP = composer.getVariable( "playerHP" )
-      HPText.text = "HP: " .. playerHP;
-
-
-
-      --Check if the player is dead. If so, pause the game and display a game over message.
-      --Pausing the game should pause the physics and set scrollSpeeds to 0.
-      if (playerHP <= 0) then
-         physics.pause();
-         scrollSpeed = 0;
-         scrollSpeed2 = 0;
-         local gameOverText = display.newText( "Game Over", display.contentCenterX, display.contentCenterY, native.systemFont, 64 )
-         gameOverText:setFillColor(1,0,0)
-         gameOverText:toFront();
-         sceneGroup:insert( gameOverText )
-
-         --Remove event listeners
-         Runtime:removeEventListener("enterFrame", enterFrame)
-         Runtime:removeEventListener("tap", fire)
-         Runtime:removeEventListener("key", KeyHandler)
-         
-         --Make the PC invisible. simpliest way to get the PC gone. I guess?
-         PC.isVisible = false;
-         --controlBar too maybe?
-         controlBar.isVisible = false;
-
-         --If you tap the screen in this state, it should go back to the title screen.
-         --Same method should work for the boss kill.
-         local function goBackToTitle(event)
-            if (event.phase == "ended") then
-               composer.gotoScene("scene.Title");
-               print("Going to title");
-            end
-         end
-         Runtime:addEventListener("touch", goBackToTitle)
-         return false;
-      end
    end
    
    addScrollableBg()
@@ -191,6 +149,12 @@ function scene:create( event )
    composer.setVariable( "playerHP", 5 );
    sceneGroup:insert( HPText )
 
+   gameOverText = display.newText( "Game Over", display.contentCenterX, display.contentCenterY, native.systemFont, 64 )
+   gameOverText:setFillColor(1,0,0)
+   gameOverText:toFront();
+   sceneGroup:insert( gameOverText )
+   gameOverText.isVisible = false;
+
    --Controller
    controlBar = display.newRect (-50, display.contentCenterY, 200, display.contentHeight);
    controlBar:setFillColor(1,1,1,0.5);
@@ -215,8 +179,6 @@ function scene:create( event )
    end
    PC.collision = onLocalCollision;
    PC:addEventListener( "collision" );
-
-
 
    sceneGroup:insert( PC )
 
@@ -246,6 +208,7 @@ function scene:create( event )
       if (cnt < 3) then
          cnt = cnt+1;
          local p = display.newCircle (PC.x+50, PC.y, 15);
+         sceneGroup:insert( p )
          p.anchorY = 1;
          p:setFillColor(0,1,0);
          physics.addBody (p, "dynamic", {radius=5} );
@@ -268,7 +231,6 @@ function scene:create( event )
       end
       return false;
    end
-
    Runtime:addEventListener("tap", fire)
 
    --I added this to make it easier to fire. - James
@@ -286,8 +248,6 @@ function scene:create( event )
       return false;
    end
    Runtime:addEventListener( "key", KeyHandler );
-
-
 end
  
 -- "scene:show()"
@@ -303,6 +263,13 @@ function scene:show( event )
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
 
+      --Reset score and HP
+      composer.setVariable( "Score", 0 );
+      composer.setVariable( "playerHP", 5 );
+
+      --start update loop
+      Runtime:addEventListener("enterFrame", update)
+
       -- Spawns two enemies, type randomly chosen
       -- Clumsy implementation, could change later -- Lilli
       function spawnEnemies()
@@ -312,25 +279,31 @@ function scene:show( event )
             local squareEnemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
             squareEnemy:spawn()
             squareEnemy:move()
+            sceneGroup:insert( squareEnemy.shape )
          else
             local polyEnemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
             polyEnemy:spawn()
             polyEnemy:move(PC.x, PC.y)
+            sceneGroup:insert( polyEnemy.shape )
          end
 
-         -- Spawn second enemy
-         randomNumber = math.random()
-         if randomNumber < 0.5 then
-            local squareEnemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-            squareEnemy:spawn()
-            squareEnemy:move()
-         else
-            local polyEnemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-            polyEnemy:spawn()
-            polyEnemy:move(PC.x, PC.y)
+         local spawnNumber = math.random(1,2)
+         for i=1,spawnNumber do
+            randomNumber = math.random()
+            if randomNumber < 0.5 then
+               local enemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+               enemy:spawn()
+               enemy:move()
+               sceneGroup:insert( enemy.shape )
+            else
+               local enemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+               enemy:spawn()
+               enemy:move(PC.x, PC.y)
+               sceneGroup:insert( enemy.shape )
+            end
          end
       end
-      local spawnTimer = timer.performWithDelay(3000,spawnEnemies,-1) -- Spawn regular intervals, doesn't stop
+      spawnTimer = timer.performWithDelay(3E3,spawnEnemies,-1) -- Spawn regular intervals, doesn't stop
 
       -- Boss will enter after two mintues of playing
       function enterBoss()
@@ -339,7 +312,7 @@ function scene:show( event )
          boss:spawn()
          boss:move()
       end
-      timer.performWithDelay(120000,enterBoss,1) -- Boss will only enter once
+      timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
    end
 end
  
@@ -353,6 +326,9 @@ function scene:hide( event )
       -- Called when the scene is on screen (but is about to go off screen).
       -- Insert code here to "pause" the scene.
       -- Example: stop timers, stop animation, stop audio, etc.
+
+      --Stop the spawnTimer
+      timer.cancel(spawnTimer)
    elseif ( phase == "did" ) then
       -- Called immediately after scene goes off screen.
       
@@ -370,6 +346,13 @@ function scene:destroy( event )
    -- Called prior to the removal of scene's view ("sceneGroup").
    -- Insert code here to clean up the scene.
    -- Example: remove display objects, save state, etc.
+
+   --Delete everything in sceneGroup
+   for i=sceneGroup.numChildren,1,-1 do
+      local child = sceneGroup[i]
+      child.parent:remove( child )
+      child = nil
+   end
 end
  
 ---------------------------------------------------------------------------------
@@ -381,5 +364,48 @@ scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
  
 ---------------------------------------------------------------------------------
+
+
+--Game loop function
+function update()
+   -- --Update score
+   ScoreText.text = "Score: " .. composer.getVariable( "Score" );
+   -- --Update HP
+   local playerHP = composer.getVariable( "playerHP" )
+   HPText.text = "HP: " .. playerHP;
+
+   --Check if the player is dead. If so, pause the game and display a game over message.
+   --Pausing the game should pause the physics and set scrollSpeeds to 0.
+   if (playerHP <= 0) then
+      physics.pause();
+      scrollSpeed = 0;
+      scrollSpeed2 = 0;
+
+      --Remove event listeners
+      Runtime:removeEventListener("enterFrame", enterFrame)
+      Runtime:removeEventListener("tap", fire)
+      Runtime:removeEventListener("key", KeyHandler)
+      
+      --Display game over message
+      gameOverText.isVisible = true;
+
+      --Set PC color to red
+      PC:setFillColor(1,0,0);
+
+      --Disable the controller
+      controlBar.isVisible = false;
+
+      --If you tap the screen in this state, it should go back to the title screen.
+      --Same method should work for the boss kill.
+      local function goBackToTitle(event)
+         if (event.phase == "ended") then
+            composer.gotoScene("scene.Title");
+            print("Going to title");
+         end
+      end
+      Runtime:addEventListener("touch", goBackToTitle)
+      return false;
+   end
+end
 
 return scene
