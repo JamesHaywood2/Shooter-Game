@@ -12,15 +12,22 @@ local opt =
 
 local sheet = graphics.newImageSheet("Enemy.png", opt)
 
+local sequence = {
+  {
+    name = "plane", frames = {1}
+  }
+}
+
 
 function Square:spawn()
-  --self.shape = display.newRect (display.actualContentWidth+50, math.random(50, display.actualContentHeight-50), 30, 30); 
-  self.shape = display.newImage(sheet, 1)
+  self.shape = display.newRect (display.actualContentWidth+50, math.random(50, display.actualContentHeight-50), 30, 30); 
+  --sprite = display.newImage(sheet, 1)
+  --self.shape:setSequence("plane")
   self.shape.pp = self;
   self.shape.tag = "enemy";
   self.shape:setFillColor ( 0, 1, 1);
-  outline = graphics.newOutline(1, sheet, 1)
-  physics.addBody(self.shape, "kinematic", {outline = outline}); 
+  --planeOutline = graphics.newOutline(1, sheet, 1)
+  physics.addBody(self.shape, "kinematic"); 
 end
 
 --Will add velocity to the square in the -x direction
