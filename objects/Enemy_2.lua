@@ -9,7 +9,7 @@ function Triangle:spawn()
     self.shape.pp = self;
     self.shape.tag = "enemy";
     self.shape:setFillColor ( 1, 0, 1);
-    physics.addBody(self.shape, "kinematic",{shape={-15,-15,15,-15,0,15}}); 
+    physics.addBody(self.shape, "kinematic",{shape={-30,-30,30,-30,0,30}}); 
 end
 
 function Triangle:move(playerX, playerY)

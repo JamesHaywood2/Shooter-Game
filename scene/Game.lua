@@ -83,7 +83,7 @@ function scene:create( event )
    playerHP = 5;
    PC = display.newCircle (75, display.contentCenterY, 25);
    PC.tag = "player";
-   physics.addBody (PC, "dynamic", {isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
+   physics.addBody (PC, "dynamic", {radius = 25, isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
