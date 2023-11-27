@@ -368,10 +368,16 @@ scene:addEventListener( "destroy", scene )
 local function moveBg(dt)
    --This just condenses code and makes it easier to read imo - James.
    local function move(bg, scrollSpeed)
-      bg.x = bg.x + scrollSpeed * dt
+      bg.x = bg.x + -scrollSpeed * dt
 
-      if (bg.x - display.contentWidth/2.5) > display.actualContentWidth then
-         bg:translate(-bg.contentWidth * 2.8 , 0)
+      --If the background image has moved far enough to the right, move it back to the left side.
+      -- if (bg.x - display.contentWidth/2.5) > display.actualContentWidth then
+      --    bg:translate(-bg.contentWidth * 2.8 , 0)
+      -- end
+
+      --If background has moved far enough to the left, move it back to the right side.
+      if (bg.x + 2*(display.contentWidth/2.5)) < 0 then
+         bg:translate(bg.contentWidth*2.8,0);
       end
    end
 
@@ -405,7 +411,7 @@ function enterFrame()
    end
 
    --Print enemy table size
-   print("Enemy table size: " .. #enemyTable)
+   -- print("Enemy table size: " .. #enemyTable)
 
    --If the player's HP is 0, display the game over text.
    if (playerHP <= 0 and gameRunning == true) or (composer.getVariable("bossDefeated") == true) then
