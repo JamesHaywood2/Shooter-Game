@@ -11,7 +11,7 @@ local fish = require("objects.Boss")
 physics.start()
 physics.setGravity(0,0);
  
- 
+physics.setDrawMode('hybrid');
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
 -- unless "composer.removeScene()" is called.
