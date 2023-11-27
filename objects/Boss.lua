@@ -10,6 +10,9 @@ local Boss = Enemy:new( {HP=30} );
 --The variable 'fish' contains every display object that makes up the fish    
 
 function Boss:spawn()
+    --Set HP to 30  
+    self.HP = 30
+
     local fishOpt =
     {
         frames = {
@@ -93,7 +96,6 @@ function Boss:spawn()
 end
 
 function Boss:move()
-
     -- Moves to a random position on the screen
     local function singleMove()
         transition.to(self.shape,{time=2000,x=math.random(display.contentCenterX-100,display.actualContentWidth-100),y=math.random(50,display.actualContentHeight-100) }) 
@@ -108,6 +110,7 @@ function Boss:hit()
     self.HP = self.HP - 1
     if (self.HP > 0) then 
 		audio.play( soundTable["hitSound"] );
+        print("boss hit: " .. self.HP)
         return 0;
 	else 
 		audio.play( soundTable["explodeSound"] );

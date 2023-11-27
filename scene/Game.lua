@@ -33,6 +33,9 @@ function scene:create( event )
 
    enemyTable = {}
 
+   --Boss object
+   Boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
+
 
 
    --Add scrolling background
@@ -87,7 +90,7 @@ function scene:create( event )
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
-         print("Collision with player")
+         -- print("Collision with player")
          if (event.other.tag == "enemy") then
             event.other:removeSelf();
             event.other = nil;
@@ -225,7 +228,7 @@ function scene:create( event )
    --Really just need to check for the enemies hitting the kill zone. Projectiles destroy themselves regardless.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
-         print("Collision with kill zone")
+         -- print("Collision with kill zone")
          if (event.other.tag == "enemy") then
             local indexOfEnemy = table.indexOf(enemyTable, event.other)
             table.remove(enemyTable, indexOfEnemy)
@@ -299,12 +302,11 @@ function scene:show( event )
       -- Boss will enter after two mintues of playing
       function enterBoss()
          timer.cancel(spawnTimer)
-         local boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-         boss:spawn()
-         boss:move()
-         sceneGroup:insert(boss.shape)
+         Boss:spawn()
+         Boss:move()
+         sceneGroup:insert(Boss.shape)
       end
-      timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      BossSpawnTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
@@ -333,6 +335,14 @@ function scene:hide( event )
          display.remove(enemy.shape)
          enemy = nil
          table.remove(enemyTable, i)
+      end
+
+      --Clear the boss
+      if (Boss ~= nil) then
+         display.remove(Boss.shape)
+         --Stop the boss timer
+         timer.cancel(BossSpawnTimer)
+
       end
 
 
@@ -427,14 +437,17 @@ function enterFrame()
 
       --Make the player disappear.
       PC.isVisible = false;
+
+
       
       --If you tap the screen in this state, it should go back to the title screen.
       --Same method should work for the boss kill.
       local function goBackToTitle(event)
-         if (event.phase == "ended") then
+         if (event.phase == "began") then
             Runtime:removeEventListener("touch", goBackToTitle)
             composer.gotoScene("scene.Title");
             print("Going to title");
+            return true;
          end
       end
       Runtime:addEventListener("touch", goBackToTitle)
