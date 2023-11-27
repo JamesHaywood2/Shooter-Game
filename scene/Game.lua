@@ -36,8 +36,6 @@ function scene:create( event )
    --Boss object
    Boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
 
-
-
    --Add scrolling background
    --bg display group
    local bgGroup = display.newGroup()
@@ -84,9 +82,32 @@ function scene:create( event )
    --Add player character
    ---- Main Player
    playerHP = 5;
-   PC = display.newCircle (75, display.contentCenterY, 25);
+
+   --This is the old way of doing it. Just a circle to represent the player character.
+   -- PC = display.newCircle (75, display.contentCenterY, 25);
+
+   --This is the new way of doing it. Makes the PC a space ship.
+   local shipOpt = { frames = {
+         --Unscaled
+         -- {x=144, y=0, width=16, height=15}, --Ship 1: White facing right
+         -- {x=144, y=24, width=16, height=15}, --Ship 2: White facing left
+         --Scaled
+         {x=576, y=0, width=64, height=60}, --Ship 1: White facing right
+         {x=576, y=96, width=64, height=60}, --Ship 2: White facing left
+      }}
+   local shipSheet = graphics.newImageSheet("Galaga_Ship_Scaled.png", shipOpt)
+   local shipSeqData = {
+      {name = "ship1", start=1, count=1, time=0, loopCount=1},
+      {name = "ship2", start=2, count=1, time=0, loopCount=1}
+   }
+   PC = display.newSprite(shipSheet, shipSeqData)
+   PC:setSequence("ship2")
+   PC.x = 75;
+   PC.y = display.contentCenterY;
+   
+
    PC.tag = "player";
-   physics.addBody (PC, "dynamic", {radius = 25, isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
+   physics.addBody (PC, "dynamic", { radius=25, isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then

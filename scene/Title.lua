@@ -52,8 +52,6 @@ function scene:create( event )
       end
    })
    sceneGroup:insert( startButton )
-
-
 end
  
 -- "scene:show()"
