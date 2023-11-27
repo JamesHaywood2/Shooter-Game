@@ -26,6 +26,7 @@ function scene:create( event )
    local groupText = display.newText( "James Haywood, Lillian Snoddy, Elizabeth Elgin, Adam Pruitt ", display.contentCenterX, display.contentCenterY - 50, native.systemFont, 32 )
    sceneGroup:insert( groupText )
    --Add start button
+   ButtonCounter = 0;
    local startButton = widget.newButton({
       x = display.contentCenterX,
       y = display.contentCenterY+100,
@@ -37,14 +38,20 @@ function scene:create( event )
       height = 100,
       cornerRadius = 25,
       onEvent = function(event)
-         if (event.phase == "ended") then
-            composer.gotoScene("scene.Game");
+         -- if (event.phase == "ended") then
+         --    composer.gotoScene("scene.Game");
+         -- end
+         if (event.phase == "began") then 
+            ButtonCounter = 1;
+         elseif (event.phase == "ended") then
+            if (ButtonCounter == 1) then
+               composer.gotoScene("scene.Game");
+            end
+            ButtonCounter = 0;
          end
       end
    })
    sceneGroup:insert( startButton )
-
-
 end
  
 -- "scene:show()"

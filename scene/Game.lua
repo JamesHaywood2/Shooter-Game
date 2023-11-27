@@ -33,7 +33,8 @@ function scene:create( event )
 
    enemyTable = {}
 
-
+   --Boss object
+   Boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
 
    --Add scrolling background
    --bg display group
@@ -81,13 +82,36 @@ function scene:create( event )
    --Add player character
    ---- Main Player
    playerHP = 5;
-   PC = display.newCircle (75, display.contentCenterY, 25);
+
+   --This is the old way of doing it. Just a circle to represent the player character.
+   -- PC = display.newCircle (75, display.contentCenterY, 25);
+
+   --This is the new way of doing it. Makes the PC a space ship.
+   local shipOpt = { frames = {
+         --Unscaled
+         -- {x=144, y=0, width=16, height=15}, --Ship 1: White facing right
+         -- {x=144, y=24, width=16, height=15}, --Ship 2: White facing left
+         --Scaled
+         {x=576, y=0, width=64, height=60}, --Ship 1: White facing right
+         {x=576, y=96, width=64, height=60}, --Ship 2: White facing left
+      }}
+   local shipSheet = graphics.newImageSheet("Galaga_Ship_Scaled.png", shipOpt)
+   local shipSeqData = {
+      {name = "ship1", start=1, count=1, time=0, loopCount=1},
+      {name = "ship2", start=2, count=1, time=0, loopCount=1}
+   }
+   PC = display.newSprite(shipSheet, shipSeqData)
+   PC:setSequence("ship2")
+   PC.x = 75;
+   PC.y = display.contentCenterY;
+   
+
    PC.tag = "player";
-   physics.addBody (PC, "dynamic", {radius = 25, isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
+   physics.addBody (PC, "dynamic", { radius=25, isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
-         print("Collision with player")
+         -- print("Collision with player")
          if (event.other.tag == "enemy") then
             event.other:removeSelf();
             event.other = nil;
@@ -225,7 +249,7 @@ function scene:create( event )
    --Really just need to check for the enemies hitting the kill zone. Projectiles destroy themselves regardless.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
-         print("Collision with kill zone")
+         -- print("Collision with kill zone")
          if (event.other.tag == "enemy") then
             local indexOfEnemy = table.indexOf(enemyTable, event.other)
             table.remove(enemyTable, indexOfEnemy)
@@ -299,12 +323,11 @@ function scene:show( event )
       -- Boss will enter after two mintues of playing
       function enterBoss()
          timer.cancel(spawnTimer)
-         local boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-         boss:spawn()
-         boss:move()
-         sceneGroup:insert(boss.shape)
+         Boss:spawn()
+         Boss:move()
+         sceneGroup:insert(Boss.shape)
       end
-      timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      BossSpawnTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
@@ -335,6 +358,14 @@ function scene:hide( event )
          table.remove(enemyTable, i)
       end
 
+      --Clear the boss
+      if (Boss ~= nil) then
+         display.remove(Boss.shape)
+         --Stop the boss timer
+         timer.cancel(BossSpawnTimer)
+
+      end
+
 
    elseif ( phase == "did" ) then
       -- Called immediately after scene goes off screen.
@@ -351,6 +382,32 @@ function scene:destroy( event )
    -- Insert code here to clean up the scene.
    -- Example: remove display objects, save state, etc.
 
+   --Remove all event listeners
+   Runtime:removeEventListener("enterFrame", enterFrame)
+   Runtime:removeEventListener("tap", fire)
+   Runtime:removeEventListener("touch", move)
+   Runtime:removeEventListener("key", KeyHandler)
+
+   --Remove bgGroup and its children
+   bg1:removeSelf()
+   bg1 = nil
+   bg2:removeSelf()
+   bg2 = nil
+   bg3:removeSelf()
+   bg3 = nil
+   bgS1:removeSelf()
+   bgS1 = nil
+   bgS2:removeSelf()
+   bgS2 = nil
+   bgS3:removeSelf()
+   bgS3 = nil
+
+   --Go through sceneGroup and remove all its contents
+   for i = sceneGroup.numChildren, 1, -1 do
+      local child = sceneGroup[i]
+      child:removeSelf()
+      child = nil
+   end
 
 end
  
@@ -427,14 +484,19 @@ function enterFrame()
 
       --Make the player disappear.
       PC.isVisible = false;
+
+
       
       --If you tap the screen in this state, it should go back to the title screen.
       --Same method should work for the boss kill.
       local function goBackToTitle(event)
-         if (event.phase == "ended") then
+         if (event.phase == "began") then
             Runtime:removeEventListener("touch", goBackToTitle)
             composer.gotoScene("scene.Title");
             print("Going to title");
+            --Destroy the game scene.
+            composer.removeScene("scene.Game");
+            return true;
          end
       end
       Runtime:addEventListener("touch", goBackToTitle)
