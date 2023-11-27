@@ -382,6 +382,32 @@ function scene:destroy( event )
    -- Insert code here to clean up the scene.
    -- Example: remove display objects, save state, etc.
 
+   --Remove all event listeners
+   Runtime:removeEventListener("enterFrame", enterFrame)
+   Runtime:removeEventListener("tap", fire)
+   Runtime:removeEventListener("touch", move)
+   Runtime:removeEventListener("key", KeyHandler)
+
+   --Remove bgGroup and its children
+   bg1:removeSelf()
+   bg1 = nil
+   bg2:removeSelf()
+   bg2 = nil
+   bg3:removeSelf()
+   bg3 = nil
+   bgS1:removeSelf()
+   bgS1 = nil
+   bgS2:removeSelf()
+   bgS2 = nil
+   bgS3:removeSelf()
+   bgS3 = nil
+
+   --Go through sceneGroup and remove all its contents
+   for i = sceneGroup.numChildren, 1, -1 do
+      local child = sceneGroup[i]
+      child:removeSelf()
+      child = nil
+   end
 
 end
  
@@ -468,6 +494,8 @@ function enterFrame()
             Runtime:removeEventListener("touch", goBackToTitle)
             composer.gotoScene("scene.Title");
             print("Going to title");
+            --Destroy the game scene.
+            composer.removeScene("scene.Game");
             return true;
          end
       end
