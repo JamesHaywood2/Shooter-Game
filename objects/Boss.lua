@@ -53,8 +53,10 @@ function Boss:spawn()
     self.shape.AnchorX, self.shape.AnchorY = 0.5, 0.5
     self.shape.x = display.actualContentWidth
     self.shape.y = display.contentCenterY
-    self.shape.xScale = 2.5
-    self.shape.yScale = 2.5
+    local scaleFactor = 2.5;
+    self.shape:scale(scaleFactor, scaleFactor)
+    -- self.shape.xScale = 2.5
+    -- self.shape.yScale = 2.5
 
     --Add the mouth
     mouth = display.newSprite(self.shape, fishSheet, fishSeqData)
@@ -92,7 +94,22 @@ function Boss:spawn()
 
     self.shape.pp = self;
     self.shape.tag = "enemy";
-    physics.addBody(self.shape, "kinematic"); 
+
+
+    --(fishOpt.frames[14].width*scaleFactor)/2
+
+    --Hitbox shape
+    local snout = {halfWidth = 80, halfHeight=20, x=-200, y=23}
+    local body = {halfWidth = 140, halfHeight=50, x=0, y=15}
+    local dFin = {halfWidth = 30, halfHeight=70, x=10, y=-75, angle=55}
+    local cFin = {halfWidth = 30, halfHeight=70, x=10, y=75, angle=-55}
+
+    physics.addBody(self.shape, "kinematic",
+        {box=snout, isSensor=true},
+        {box=body, isSensor=true},
+        {box=dFin, isSensor=true},
+        {box=cFin, isSensor=true}
+    ); 
 end
 
 function Boss:move()

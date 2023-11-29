@@ -327,7 +327,7 @@ function scene:show( event )
          Boss:move()
          sceneGroup:insert(Boss.shape)
       end
-      BossSpawnTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      BossSpawnTimer = timer.performWithDelay(1E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
