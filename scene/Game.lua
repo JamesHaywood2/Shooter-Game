@@ -270,7 +270,6 @@ end
  
 -- "scene:show()"
 function scene:show( event )
- 
    local sceneGroup = self.view
    local phase = event.phase
  
@@ -293,7 +292,7 @@ function scene:show( event )
       -- Called when the scene is now on screen.
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
-
+      audio.play( soundTable["backgroundSound"] );
       gameRunning = true;
       --Start the updater
       Runtime:addEventListener("enterFrame", enterFrame)
