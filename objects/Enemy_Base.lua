@@ -13,11 +13,15 @@ local Enemy = {tag="enemy", HP=1, xPos=0, yPos=0, fR=0, sR=0, bR=0, fT=1000, sT=
 
 --I think??? - James
 
+MaxHP = 1;
+
 
 function Enemy:new (o)    --constructor
   o = o or {}; 
   setmetatable(o, self);
   self.__index = self;
+  MaxHP = self.HP;
+
   return o;
 end
 
@@ -57,7 +61,8 @@ function Enemy:hit ()
 	self.HP = self.HP - 1;
 	if (self.HP > 0) then 
 		audio.play( soundTable["hitSound"] );
-		self.shape:setFillColor(0.5,0.5,0.5);
+    local percentHP = self.HP/MaxHP;
+    self.shape:setFillColor(1, percentHP, percentHP);
     return 0;
 	
 	else 

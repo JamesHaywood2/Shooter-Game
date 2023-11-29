@@ -107,8 +107,7 @@ function scene:create( event )
    
 
    PC.tag = "player";
-   pcOutline = graphics.newOutline(1, shipSheet, 2)
-   physics.addBody (PC, "dynamic", {outline = pcOutline, isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
+   physics.addBody (PC, "dynamic", {isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
