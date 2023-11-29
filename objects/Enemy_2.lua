@@ -5,29 +5,31 @@ local Triangle = Enemy:new( {HP=3});
 local spriteOpt = {frames={
     {x = 24, y = 246, width = 300, height = 162}
   }}
-  local spriteSheet = graphics.newImageSheet("objects/Enemy.png", spriteOpt)
-  local spriteSeq = {
+local spriteSheet = graphics.newImageSheet("objects/Enemy.png", spriteOpt)
+local spriteSeq = {
     {name = "default", frames = {1}}
-  }
+}
+
+local scaleFactor = 0.5;
+--Get width and height of sprite from spriteOpt
+local width = spriteOpt.frames[1].width * scaleFactor;
+local height = spriteOpt.frames[1].height * scaleFactor;
+local hitboxShape = {-width/2,-height/2, width/2,-height/2, width/2,height/2, -width/2,height/2};
+--Shape goes counter-clockwise from bottom left corner
+--Just take the width and height of the sprite from spriteOpt, multiply by the scale, and divide by 2 to get the coordinates of the corners. Round up.
 
 function Triangle:spawn()
-    -- self.shape = display.newPolygon(display.actualContentWidth+50, math.random(50, display.actualContentHeight-50),{-15,-15, 15,-15 ,0,15});
-    -- self.shape.xScale = 2;
-    -- self.shape.yScale = 2;
-
     self.shape = display.newSprite(spriteSheet, spriteSeq);
     self.shape:setSequence("default");
     self.shape:play();
     self.shape.x = display.actualContentWidth+50;
     self.shape.y = math.random(50, display.actualContentHeight-50);
-    self.shape:scale(0.5, 0.5)
+    self.shape:scale(scaleFactor, scaleFactor)
 
     self.shape.pp = self;
     self.shape.tag = "enemy";
-    -- self.shape:setFillColor ( 1, 0, 1);
-    physics.addBody(self.shape, "kinematic",{shape={-75,-41, 75, -41, 75, 41, -75, 41 }});
-    --Shape goes counter-clockwise from bottom left corner
-    --Just take the width and height of the sprite from spriteOpt, multiply by the scale, and divide by 2 to get the coordinates of the corners. Round up.
+    physics.addBody(self.shape, "kinematic",{shape=hitboxShape});
+
 end
 
 function Triangle:move(playerX, playerY)
