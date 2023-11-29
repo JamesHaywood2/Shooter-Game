@@ -115,6 +115,7 @@ function scene:create( event )
          if (event.other.tag == "enemy") then
             event.other:removeSelf();
             event.other = nil;
+            audio.play( soundTable["hurtSound"] );
             playerHP = playerHP - 1;
             --Play a sound when the player is hit.
          end
