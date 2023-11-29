@@ -104,18 +104,19 @@ function Boss:spawn()
     local dFin = {halfWidth = 30, halfHeight=70, x=10, y=-75, angle=55}
     local cFin = {halfWidth = 30, halfHeight=70, x=10, y=75, angle=-55}
 
+    local enemyCollisionFilter = { categoryBits = 4, maskBits = 2 }
     physics.addBody(self.shape, "kinematic",
-        {box=snout, isSensor=true},
-        {box=body, isSensor=true},
-        {box=dFin, isSensor=true},
-        {box=cFin, isSensor=true}
+        {box=snout, isSensor=true, filter=enemyCollisionFilter},
+        {box=body, isSensor=true, filter=enemyCollisionFilter},
+        {box=dFin, isSensor=true, filter=enemyCollisionFilter},
+        {box=cFin, isSensor=true, filter=enemyCollisionFilter}
     ); 
 end
 
 function Boss:move()
     -- Moves to a random position on the screen
     local function singleMove()
-        transition.to(self.shape,{time=2000,x=math.random(display.contentCenterX-100,display.actualContentWidth-100),y=math.random(50,display.actualContentHeight-100) }) 
+        transition.to(self.shape,{time=2000,x=math.random(display.contentCenterX-75,display.actualContentWidth-100),y=math.random(50,display.actualContentHeight-100) }) 
     end
     movingTimer = timer.performWithDelay(2000,singleMove,-1) -- repeatedly move
 
@@ -151,6 +152,91 @@ function Boss:hit()
 
         return 1;
 	end		
+end
+
+local projectileOpt = { frames = {
+    {x = 25, y = 18, width = 137, height = 67},
+    {x = 195, y = 44, width = 75, height = 36},
+    {x = 295, y = 39, width = 101, height = 46},
+    {x = 26, y = 109, width = 128, height = 93},
+    {x = 225, y = 136, width = 96, height = 39},
+  }}
+local projectileSheet = graphics.newImageSheet("objects/Projectiles.png", projectileOpt)
+local projectileSeq = {
+    {name = "shark", frames = {1}},
+    {name = "blueFireball1", frames = {2}},
+    {name = "blueFireball2", frames = {3}},
+    {name = "arc", frames = {4}},
+    {name = "redFireball", frames = {5}},
+}
+
+
+function Boss:fireProjectile(sceneGroup, playerX, playerY)
+    local function playerDirection(playerX, playerY)
+        local xDist = playerX - self.shape.x;
+        local yDist = playerY - self.shape.y;
+        local dist = math.sqrt(xDist^2 + yDist^2);
+        local xUnit = xDist/dist;
+        local yUnit = yDist/dist;
+        return xUnit, yUnit
+    end
+
+    local function createProjectile(sequence, xScale, yScale)
+        --Default values
+        sequence = sequence or "blueFireball1"
+        xScale = xScale or 1
+        yScale = yScale or 1
+
+        local projectile = display.newSprite(projectileSheet, projectileSeq);
+        projectile:setSequence(sequence)
+        sceneGroup:insert(projectile)
+        projectile.tag = "EnemyProjectile";
+        --Mirror projectile so it's facing the player
+        projectile.xScale = -1;
+        local projectileCollisionFilter = { categoryBits = 8, maskBits = 17 }
+        projectile.x, projectile.y = self.shape.x-150, self.shape.y
+
+        projectile:scale(xScale, yScale)
+        local projectileHitbox = {-projectile.width*xScale/2, -projectile.height*yScale/2, projectile.width*xScale/2, -projectile.height*yScale/2, projectile.width*xScale/2, projectile.height*yScale/2, -projectile.width*xScale/2, projectile.height*yScale/2}
+        physics.addBody(projectile, "kinematic", {isSensor=true, filter=projectileCollisionFilter, shape=projectileHitbox})
+        return projectile
+    end
+
+    --Generate a random number between 1 and 3 to determine which projectile to fire
+    local projectileType = math.random(1,100);
+    --Fire the projectile
+    if (projectileType <= 25) then
+        --25% chance to fire a shark that moves towards the player faster than the other projectiles
+        local projectile = createProjectile("shark", 1, 1)
+
+        projectile.rotation = math.atan((playerY - self.shape.y)/(playerX - self.shape.x))*180/math.pi
+        local xUnit, yUnit = playerDirection(playerX, playerY)
+        projectile:setLinearVelocity(xUnit*500, yUnit*500);
+    elseif (projectileType > 25 and projectileType <= 65) then
+        --40% chance to fire a blue fireball that moves straight across the screen
+        local projectile1 = createProjectile("blueFireball1")
+        projectile1:setLinearVelocity(-300, 0);
+    elseif (projectileType > 65 and projectileType <= 90) then
+        --25% chance to fire a fan of blue fireballs
+        --One fireball goes straight across the screen
+        local projectile = createProjectile("blueFireball2", 0.5, 0.5)
+        projectile:setLinearVelocity(-300, 0);
+
+        --One fireball is angled up
+        local projectile2 = createProjectile("blueFireball2", 0.5, 0.5)
+        projectile2.rotation = 10
+        projectile2:setLinearVelocity(-300, -50);
+
+        --One is angled down
+        local projectile3 = createProjectile("blueFireball2", 0.5, 0.5)
+        projectile3.rotation = -10
+        projectile3:setLinearVelocity(-300, 50);
+    elseif (projectileType > 90 and projectileType <= 100) then
+        --20% chance to fire an wide arc
+        local projectile = createProjectile("arc", 1, 2)
+        projectile:setLinearVelocity(-200, 0);
+    end
+
 end
 
 return Boss;

@@ -29,8 +29,9 @@ function Square:spawn()
   
   self.shape.pp = self;
   self.shape.tag = "enemy";
-
-  physics.addBody(self.shape, "kinematic",{shape=hitboxShape});
+  
+  local enemyCollisionFilter = { categoryBits = 4, maskBits = 19 }
+  physics.addBody(self.shape, "kinematic",{shape=hitboxShape, filter=enemyCollisionFilter});
 end
 
 --Will add velocity to the square in the -x direction

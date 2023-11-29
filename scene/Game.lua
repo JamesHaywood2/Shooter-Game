@@ -106,13 +106,14 @@ function scene:create( event )
    PC.y = display.contentCenterY;
    
 
+   local pcCollisionFilter = { categoryBits = 1, maskBits = 12 }
    PC.tag = "player";
-   physics.addBody (PC, "dynamic", {isSensor=true}); --I made it a sensor because collision with enemies was moving it. - James
+   physics.addBody (PC, "dynamic", {isSensor=true, filter=pcCollisionFilter}); --I made it a sensor because collision with enemies was moving it. - James
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
          -- print("Collision with player")
-         if (event.other.tag == "enemy") then
+         if (event.other.tag == "enemy" or event.other.tag == "EnemyProjectile") then
             event.other:removeSelf();
             event.other = nil;
             playerHP = playerHP - 1;
@@ -133,8 +134,13 @@ function scene:create( event )
       if (gameRunning) then
          if event.phase == "began" then		
             PC.markY = PC.y 
-         elseif event.phase == "moved" then	 	
-            local y = (event.y - event.yStart) + PC.markY	 	
+         elseif event.phase == "moved" then
+            --Gets rid of a bug where if click start, then click-hold super fast after, then move over the control bar, PC.MarkY would be nil.
+            --So basically if it's nil just set it to the current y position.
+            if (PC.markY == nil) then
+               PC.markY = PC.y
+            end
+            local y = (event.y - event.yStart) + PC.markY;
             
             if (y <= 20 + PC.height/2) then
                PC.y = 20+PC.height/2;
@@ -150,18 +156,39 @@ function scene:create( event )
    end
    controlBar:addEventListener("touch", move);
 
-   -- Projectile 
+   -- Projectile
+   local projectileOpt = { frames = {
+      {x = 225, y = 136, width = 96, height = 39},
+    }}
+  local projectileSheet = graphics.newImageSheet("objects/Projectiles.png", projectileOpt)
+  local projectileSeq = {
+      {name = "redFireball", frames = {1}},
+  }
+
+  local function createProjectile(xScale, yScale)
+      xScale = xScale or 1
+      yScale = yScale or 1
+
+      local projectile = display.newSprite(projectileSheet, projectileSeq);
+      projectile:setSequence("redFireball")
+      sceneGroup:insert(projectile)
+      local pcBulletCollisionFilter = { categoryBits = 2, maskBits = 20 }
+      projectile.x, projectile.y = PC.x, PC.y
+
+      projectile:scale(xScale, yScale)
+      local projectileHitbox = {-projectile.width*xScale/2, -projectile.height*yScale/2, projectile.width*xScale/2, -projectile.height*yScale/2, projectile.width*xScale/2, projectile.height*yScale/2, -projectile.width*xScale/2, projectile.height*yScale/2}
+      physics.addBody (projectile, "dynamic", {radius=15, friction=0, filter=pcBulletCollisionFilter, shape=projectileHitbox} );
+      return projectile
+   end
+
    local cnt = 0;
-   function fire (event) 
+   local function fire (event) 
       if (gameRunning) then
          if (cnt < 3) then
             cnt = cnt+1;
-            local p = display.newCircle (PC.x+50, PC.y, 15);
-            sceneGroup:insert( p )
-            p.anchorY = 1;
-            p:setFillColor(0,1,0);
-            physics.addBody (p, "dynamic", {radius=5} );
-            p:applyForce(2, 0, p.x, p.y);
+            --Call the createProjectile function to create a projectile.
+            local p = createProjectile(.5,.7)
+            p:setLinearVelocity(800, 0);
    
             audio.play( soundTable["shootSound"] );
    
@@ -233,24 +260,26 @@ function scene:create( event )
    sceneGroup:insert( congratsText )
    congratsText.isVisible = false;
 
+   local killZoneCollisionFilter = { categoryBits = 16, maskBits = 14 }
+
    --Add kill zones for projectiles and enemies
    --Wall off the screen to the right.
    local killZoneR = display.newRect(display.contentWidth + 150, display.contentCenterY, 100, display.contentHeight);
    killZoneR:setFillColor(1,0,0,0.5);
-   physics.addBody (killZoneR, "dynamic", {isSensor=true});
+   physics.addBody (killZoneR, "dynamic", {isSensor=true, filter=killZoneCollisionFilter});
    sceneGroup:insert(killZoneR);
 
    --Wall off the screen to the left. This is for the enemies
    local killZoneL = display.newRect(-150, display.contentCenterY, 100, display.contentHeight);
    killZoneL:setFillColor(1,0,0,0.5);
-   physics.addBody (killZoneL, "dynamic", {isSensor=true});
+   physics.addBody (killZoneL, "dynamic", {isSensor=true, filter=killZoneCollisionFilter});
    sceneGroup:insert(killZoneL);
 
    --Really just need to check for the enemies hitting the kill zone. Projectiles destroy themselves regardless.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
          -- print("Collision with kill zone")
-         if (event.other.tag == "enemy") then
+         if (event.other.tag == "enemy" or event.other.tag=="EnemyProjectile") then
             local indexOfEnemy = table.indexOf(enemyTable, event.other)
             table.remove(enemyTable, indexOfEnemy)
             event.other:removeSelf();
@@ -326,8 +355,15 @@ function scene:show( event )
          Boss:spawn()
          Boss:move()
          sceneGroup:insert(Boss.shape)
+
+         local function fireBoss()
+            if (gameRunning) then
+               Boss:fireProjectile(sceneGroup, PC.x, PC.y)
+            end
+         end
+         BossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
-      BossSpawnTimer = timer.performWithDelay(1E3,enterBoss,1) -- Boss will only enter once
+      BossTimer = timer.performWithDelay(1E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
@@ -362,7 +398,7 @@ function scene:hide( event )
       if (Boss ~= nil) then
          display.remove(Boss.shape)
          --Stop the boss timer
-         timer.cancel(BossSpawnTimer)
+         timer.cancel(BossTimer)
 
       end
 
