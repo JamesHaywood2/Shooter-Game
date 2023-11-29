@@ -1,6 +1,6 @@
 local Enemy = require("objects.Enemy_Base");
 
-local Triangle = Enemy:new( {HP=3});
+local JetpackFish = Enemy:new( {HP=3});
 
 local spriteOpt = {frames={
     {x = 24, y = 246, width = 300, height = 162}
@@ -18,12 +18,12 @@ local hitboxShape = {-width/2,-height/2, width/2,-height/2, width/2,height/2, -w
 --Shape goes counter-clockwise from bottom left corner
 --Just take the width and height of the sprite from spriteOpt, multiply by the scale, and divide by 2 to get the coordinates of the corners. Round up.
 
-function Triangle:spawn()
+function JetpackFish:spawn(xPos, yPos)
     self.shape = display.newSprite(spriteSheet, spriteSeq);
     self.shape:setSequence("default");
     self.shape:play();
-    self.shape.x = display.actualContentWidth+50;
-    self.shape.y = math.random(50, display.actualContentHeight-50);
+    self.shape.x = xPos
+    self.shape.y = yPos
     self.shape:scale(scaleFactor, scaleFactor)
 
     self.shape.pp = self;
@@ -33,7 +33,7 @@ function Triangle:spawn()
 
 end
 
-function Triangle:move(playerX, playerY)
+function JetpackFish:move(playerX, playerY)
     --idk what the movement is exactly for this enemy.
     --It say's it should move towards the player, but idk if that means constantly (follow the player) or move towards the players position at time of spawn.
     --I'm going to assume it means move towards the player at time of spawn.
@@ -51,4 +51,4 @@ function Triangle:move(playerX, playerY)
 end
 
 
-return Triangle;
+return JetpackFish;

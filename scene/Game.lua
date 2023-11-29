@@ -2,9 +2,8 @@ local composer = require( "composer" )
 local scene = composer.newScene()
 local physics = require("physics")
 local soundTable = require("soundTable")
-local enemy = require("objects.Enemy_Base")
-local square = require("objects.Enemy_1")
-local triangle = require("objects.Enemy_2")
+local Plane = require("objects.Enemy_1")
+local JetpackFish = require("objects.Enemy_2")
 local fish = require("objects.Boss")
 
 
@@ -18,7 +17,27 @@ physics.setDrawMode('hybrid');
 ---------------------------------------------------------------------------------
  
 -- local forward references should go here
- 
+
+--idk if this is exactly necessary/works the way I think it does, but I'm making every global variable local to the scene.
+--What I think this means is when you leave the scene (exit scope), all the variables should be destroyed.
+--idk if it already does that or it keeps it for some reason because they're global??
+--It shouldn't impact anything, but if it for some reason does, just remove all of these.
+--It also gets rid of warnings about global variables. - James
+local spawnTimer = nil;
+local bossTimer = nil;
+local gameRunning = false;
+local enemyTable = {}
+local Boss = nil;
+local bg1, bg2, bg3, bgS1, bgS2, bgS3 = nil, nil, nil, nil, nil, nil
+local runtime = nil
+local scrollSpeed = nil
+local scrollSpeed2 = nil
+local PC, controlBar, ScoreText, HPText, gameOverText, congratsText = nil, nil, nil, nil, nil, nil
+local playerHP = nil
+local function enterFrame() end
+local function enterBoss() end
+local function addScrollableBg() end
+
 ---------------------------------------------------------------------------------
  
 -- "scene:create()"
@@ -327,22 +346,33 @@ function scene:show( event )
       Runtime:addEventListener("enterFrame", enterFrame)
 
       --Spawn enemies
-      function spawnEnemies()
+      local function spawnEnemies()
          local spawnNum = math.random(1,2)
+         local prevY = 0
          for i=1, spawnNum do
             local RNG = math.random();
             local enemy = nil;
+            --new random seed
+            local xPos = display.actualContentWidth+50;
+            local yPos = math.random(50, display.actualContentHeight-50);
+            --If new yPosition causes enemy to spawn too close to previous enemy, generate new yPosition
+            if (i > 1) then
+               while (math.abs(yPos - prevY) < 50) do
+                  yPos = math.random(50, display.actualContentHeight-50);
+               end
+            end
             if (RNG < 0.5) then
-               enemy = square:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-               enemy:spawn()
+               enemy = Plane:new()
+               enemy:spawn(xPos, yPos)
                enemy:move()
             else
-               enemy = triangle:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
-               enemy:spawn()
+               enemy = JetpackFish:new()
+               enemy:spawn(xPos, yPos)
                enemy:move(PC.x, PC.y)
             end
             table.insert( enemyTable, enemy )
             sceneGroup:insert( enemy.shape )
+            prevY = yPos
          end
 
       end
@@ -361,9 +391,9 @@ function scene:show( event )
                Boss:fireProjectile(sceneGroup, PC.x, PC.y)
             end
          end
-         BossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
+         bossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
-      BossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      bossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
@@ -398,9 +428,12 @@ function scene:hide( event )
       if (Boss ~= nil) then
          display.remove(Boss.shape)
          --Stop the boss timer
-         timer.cancel(BossTimer)
+         timer.cancel(bossTimer)
 
       end
+
+      --Stop all audio
+      audio.stop()
 
 
    elseif ( phase == "did" ) then
@@ -506,20 +539,36 @@ function enterFrame()
    --Print enemy table size
    -- print("Enemy table size: " .. #enemyTable)
 
+   local bossDefeated = composer.getVariable("bossDefeated")
+
    --If the player's HP is 0, display the game over text.
-   if (playerHP <= 0 and gameRunning == true) or (composer.getVariable("bossDefeated") == true) then
-      if composer.getVariable("bossDefeated") == true then
+   if (playerHP <= 0 and gameRunning == true) or (bossDefeated) then
+      if bossDefeated == true then
          congratsText.isVisible = true;
       else 
          gameOverText.isVisible = true;
 
          --cancel the spawn timer
          timer.cancel(spawnTimer)
+         --Cancel the boss timer
+         timer.cancel(bossTimer)
+
+         --Delete the player.
+         PC:removeSelf();
+         PC = nil;
+         --Delete the control bar.
+         controlBar:removeSelf();
+         controlBar = nil;
       end
       gameRunning = false;
 
+
+      --Originally upon a game over/win the player would just be made invisible, but not be deleted. You would then go back to the title screen.
+      --Upon starting again, the player would be made visible again. Nothing ever really god deleted, just reset.
+      --NOW, the scene should be getting deleted, so the player can be deleted too.
+
       --Make the player disappear.
-      PC.isVisible = false;
+      -- PC.isVisible = false;
 
 
       
