@@ -292,7 +292,7 @@ function scene:show( event )
       -- Called when the scene is now on screen.
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
-      audio.play( soundTable["backgroundSound"], {loops = -1} );
+      audio.play( soundTable["backgroundSound"], {loops = -1, fadein = 5000} );
       gameRunning = true;
       --Start the updater
       Runtime:addEventListener("enterFrame", enterFrame)
