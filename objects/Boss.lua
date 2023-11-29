@@ -127,11 +127,11 @@ end
 function Boss:hit()
     self.HP = self.HP - 1
     if (self.HP > 0) then 
-		audio.play( soundTable["hitSound"] );
+		audio.play( soundTable["bossHit"] );
         print("boss hit: " .. self.HP)
         return 0;
 	else 
-		audio.play( soundTable["explodeSound"] );
+		audio.play( soundTable["bossDeath"] );
         transition.cancel( self.shape );
         transition.cancel(movingTimer)
         
@@ -212,10 +212,12 @@ function Boss:fireProjectile(sceneGroup, playerX, playerY)
         projectile.rotation = math.atan((playerY - self.shape.y)/(playerX - self.shape.x))*180/math.pi
         local xUnit, yUnit = playerDirection(playerX, playerY)
         projectile:setLinearVelocity(xUnit*500, yUnit*500);
+        audio.play( soundTable["sharkAttack"] );
     elseif (projectileType > 25 and projectileType <= 65) then
         --40% chance to fire a blue fireball that moves straight across the screen
         local projectile1 = createProjectile("blueFireball1")
         projectile1:setLinearVelocity(-300, 0);
+        audio.play( soundTable["fireBall"] );
     elseif (projectileType > 65 and projectileType <= 90) then
         --25% chance to fire a fan of blue fireballs
         --One fireball goes straight across the screen
@@ -231,10 +233,13 @@ function Boss:fireProjectile(sceneGroup, playerX, playerY)
         local projectile3 = createProjectile("blueFireball2", 0.5, 0.5)
         projectile3.rotation = -10
         projectile3:setLinearVelocity(-300, 50);
+
+        audio.play( soundTable["threeShot"] );
     elseif (projectileType > 90 and projectileType <= 100) then
         --20% chance to fire an wide arc
         local projectile = createProjectile("arc", 1, 2)
         projectile:setLinearVelocity(-200, 0);
+        audio.play( soundTable["slashSound"] );
     end
 
 end
