@@ -116,6 +116,7 @@ function scene:create( event )
          if (event.other.tag == "enemy" or event.other.tag == "EnemyProjectile") then
             event.other:removeSelf();
             event.other = nil;
+            audio.play( soundTable["hurtSound"] );
             playerHP = playerHP - 1;
             --Play a sound when the player is hit.
          end
@@ -298,7 +299,6 @@ end
  
 -- "scene:show()"
 function scene:show( event )
- 
    local sceneGroup = self.view
    local phase = event.phase
  
@@ -321,7 +321,7 @@ function scene:show( event )
       -- Called when the scene is now on screen.
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
-
+      audio.play( soundTable["backgroundSound"], {loops = -1, fadein = 5000} );
       gameRunning = true;
       --Start the updater
       Runtime:addEventListener("enterFrame", enterFrame)
