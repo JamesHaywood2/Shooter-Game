@@ -9,6 +9,8 @@ local Boss = Enemy:new( {HP=30} );
 
 --The variable 'fish' contains every display object that makes up the fish    
 
+local bossHealthTxt = nil
+
 function Boss:spawn()
     --Set HP to 30  
     self.HP = 30
@@ -111,24 +113,6 @@ function Boss:spawn()
         {box=dFin, isSensor=true, filter=enemyCollisionFilter},
         {box=cFin, isSensor=true, filter=enemyCollisionFilter}
     ); 
-
-    -- Create Boss Health Bar
-    bossHealthTxt = display.newText("Boss HP: "..self.HP, display.contentCenterX-380, display.actualContentHeight-25, native.systemFont, 45)
-    bossBackBar = display.newRect(display.contentCenterX+125, display.actualContentHeight-25,30*25,20)
-    bossBackBar:setFillColor(1,1,1,0.5)
-    bossBackBar:setStrokeColor(1,1,1)
-    bossBackBar.strokeWidth = 2
- 
-    bossHealthBar = display.newRect(display.contentCenterX+125, display.actualContentHeight-25,30*25,20)
-    bossHealthBar:setFillColor(1,0,0,1)
-    bossHealthBar:setStrokeColor(1,1,1,0.5)
-    bossHealthBar.strokeWidth = 3
- 
-   function updateHealthBar(obj,HP)
-        bossHealthTxt.text = "Boss HP:  "..self.HP
-        obj.width = HP * 25
-        obj.x = obj.x - 25/2
-   end
 end
 
 function Boss:move()
@@ -147,7 +131,8 @@ function Boss:hit()
     if (self.HP > 0) then 
 		audio.play( soundTable["bossHit"] );
         print("boss hit: " .. self.HP)
-        updateHealthBar(bossHealthBar,self.HP)
+        Boss:UpdateHealthBar(bossHealthBar,self.HP)
+        bossHealthTxt.text = "Boss HP: "..self.HP
         return 0;
 	else 
 		audio.play( soundTable["bossDeath"] );
@@ -263,7 +248,29 @@ function Boss:fireProjectile(sceneGroup, playerX, playerY)
         projectile:setLinearVelocity(-200, 0);
         audio.play( soundTable["slashSound"] );
     end
+end
 
+function Boss:createHealthBar(sceneGroup)
+    --Create the health bar
+    bossHealthTxt = display.newText("Boss HP: "..self.HP, display.contentCenterX-380, display.actualContentHeight-25, native.systemFont, 45)
+    bossBackBar = display.newRect(display.contentCenterX+125, display.actualContentHeight-25,30*25,20)
+    bossBackBar:setFillColor(1,1,1,0.5)
+    bossBackBar:setStrokeColor(1,1,1)
+    bossBackBar.strokeWidth = 2
+
+    bossHealthBar = display.newRect(display.contentCenterX+125, display.actualContentHeight-25,30*25,20)
+    bossHealthBar:setFillColor(1,0,0,1)
+    bossHealthBar:setStrokeColor(1,1,1,0.5)
+    bossHealthBar.strokeWidth = 3
+
+    sceneGroup:insert(bossBackBar)
+    sceneGroup:insert(bossHealthBar)
+    sceneGroup:insert(bossHealthTxt)
+end
+
+function Boss:UpdateHealthBar(obj, HP)
+    obj.width = HP * 25
+    obj.x = obj.x - 25/2
 end
 
 return Boss;

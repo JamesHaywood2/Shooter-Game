@@ -145,8 +145,11 @@ function scene:create( event )
             audio.play( soundTable["enemyBulletImpact"] );
             event.other:removeSelf();
             event.other = nil;
-            playerHP = playerHP - 1;
-            updateHealthBar(healthBar,playerHP)
+            --Only take damage if the game is running. This is to prevent the player from taking damage after the game is over.
+            if (gameRunning) then
+               playerHP = playerHP - 1;
+               updateHealthBar(healthBar,playerHP)
+            end
          end
          --Can include other collision events here.
       end
@@ -311,13 +314,13 @@ function scene:create( event )
 
    --Add kill zones for projectiles and enemies
    --Wall off the screen to the right.
-   local killZoneR = display.newRect(display.contentWidth + 150, display.contentCenterY, 100, display.contentHeight);
+   local killZoneR = display.newRect(display.contentWidth + 170, display.contentCenterY, 100, display.contentHeight);
    killZoneR:setFillColor(1,0,0,0.5);
    physics.addBody (killZoneR, "dynamic", {isSensor=true, filter=killZoneCollisionFilter});
    sceneGroup:insert(killZoneR);
 
    --Wall off the screen to the left. This is for the enemies
-   local killZoneL = display.newRect(-150, display.contentCenterY, 100, display.contentHeight);
+   local killZoneL = display.newRect(-170, display.contentCenterY, 100, display.contentHeight);
    killZoneL:setFillColor(1,0,0,0.5);
    physics.addBody (killZoneL, "dynamic", {isSensor=true, filter=killZoneCollisionFilter});
    sceneGroup:insert(killZoneL);
@@ -411,6 +414,7 @@ function scene:show( event )
          timer.cancel(spawnTimer)
          Boss:spawn()
          Boss:move()
+         Boss:createHealthBar(sceneGroup)
          sceneGroup:insert(Boss.shape)
 
          local function fireBoss()
@@ -420,7 +424,7 @@ function scene:show( event )
          end
          bossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
-      bossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      bossTimer = timer.performWithDelay(1E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
