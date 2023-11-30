@@ -271,10 +271,11 @@ function Boss:createHealthBar(sceneGroup)
 end
 
 function Boss:removeHealthBar(sceneGroup)
-    print('here')
-            bossBackBar:removeSelf()
+    if bossBackBar then
+        bossBackBar:removeSelf()
         bossHealthBar:removeSelf()
         bossHealthTxt:removeSelf()
+    end
 
 end
 
