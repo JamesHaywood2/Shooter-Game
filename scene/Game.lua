@@ -424,7 +424,7 @@ function scene:show( event )
          end
          bossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
-      bossTimer = timer.performWithDelay(1E3,enterBoss,1) -- Boss will only enter once
+      bossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
 
    end
 end
