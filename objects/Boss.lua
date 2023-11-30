@@ -7,6 +7,7 @@ local physics = require("physics");
 
 local Boss = Enemy:new( {HP=30} );
 
+
 --The variable 'fish' contains every display object that makes up the fish    
 
 local bossHealthTxt = nil
@@ -161,6 +162,7 @@ function Boss:hit()
 	end		
 end
 
+
 local projectileOpt = { frames = {
     {x = 25, y = 18, width = 137, height = 67},
     {x = 195, y = 44, width = 75, height = 36},
@@ -266,6 +268,14 @@ function Boss:createHealthBar(sceneGroup)
     sceneGroup:insert(bossBackBar)
     sceneGroup:insert(bossHealthBar)
     sceneGroup:insert(bossHealthTxt)
+end
+
+function Boss:removeHealthBar(sceneGroup)
+    print('here')
+            bossBackBar:removeSelf()
+        bossHealthBar:removeSelf()
+        bossHealthTxt:removeSelf()
+
 end
 
 function Boss:UpdateHealthBar(obj, HP)

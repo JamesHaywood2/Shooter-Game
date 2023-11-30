@@ -427,6 +427,7 @@ function scene:show( event )
          bossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
       bossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      --bossTimer = timer.performWithDelay(5000,enterBoss,1) -- to test boss functionality
 
    end
 end
@@ -580,17 +581,19 @@ function enterFrame()
          congratsText.isVisible = true;
       else 
          gameOverText.isVisible = true;
+         display.remove(Boss.shape)
 
          --cancel the spawn timer
          timer.cancel(spawnTimer)
          --Cancel the boss timer
          timer.cancel(bossTimer)
+         Boss:removeHealthBar()
 
          --Delete the player.
          PC:removeSelf();
          PC = nil;
          --Delete the control bar.
-         controlBar:removeSelf();
+         controlBar:removeSelf(sceneGroup);
          controlBar = nil;
       end
       gameRunning = false;
