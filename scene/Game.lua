@@ -132,13 +132,21 @@ function scene:create( event )
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
          -- print("Collision with player")
-         if (event.other.tag == "enemy" or event.other.tag == "EnemyProjectile") then
+         if (event.other.tag == "enemy") then
+            audio.play( soundTable["hurtSound"] );
+            local indexOfEnemy = table.indexOf(enemyTable, event.other)
+            table.remove(enemyTable, indexOfEnemy)
             event.other:removeSelf();
             event.other = nil;
-            audio.play( soundTable["hurtSound"] );
             playerHP = playerHP - 1;
             updateHealthBar(healthBar,playerHP)
             --Play a sound when the player is hit.
+         elseif (event.other.tag == "EnemyProjectile") then
+            audio.play( soundTable["enemyBulletImpact"] );
+            event.other:removeSelf();
+            event.other = nil;
+            playerHP = playerHP - 1;
+            updateHealthBar(healthBar,playerHP)
          end
          --Can include other collision events here.
       end
@@ -412,7 +420,7 @@ function scene:show( event )
          end
          bossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
-      bossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
+      bossTimer = timer.performWithDelay(5E3,enterBoss,1) -- Boss will only enter once
 
    end
 end

@@ -10,6 +10,7 @@ local soundTable = {
     sharkAttack = audio.loadSound("sound/shark.wav"),
     fireBall = audio.loadSound("sound/fireball.wav"),
     bossHit = audio.loadSound("sound/bossHit.wav"),
+    enemyBulletImpact = audio.loadSound("sound/EnemyBulletImpact.wav"),
 }
 
 return soundTable;

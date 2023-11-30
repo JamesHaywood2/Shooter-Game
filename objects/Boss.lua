@@ -134,7 +134,7 @@ end
 function Boss:move()
     -- Moves to a random position on the screen
     local function singleMove()
-        transition.to(self.shape,{time=2000,x=math.random(display.contentCenterX-75,display.actualContentWidth-100),y=math.random(50,display.actualContentHeight-100) }) 
+        transition.to(self.shape,{time=2000,x=math.random(display.contentCenterX-50,display.actualContentWidth-100),y=math.random(50,display.actualContentHeight-100) }) 
     end
     movingTimer = timer.performWithDelay(2000,singleMove,-1) -- repeatedly move
 
