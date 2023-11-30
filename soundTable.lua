@@ -11,6 +11,7 @@ local soundTable = {
     fireBall = audio.loadSound("sound/fireball.wav"),
     bossHit = audio.loadSound("sound/bossHit.wav"),
     enemyBulletImpact = audio.loadSound("sound/EnemyBulletImpact.wav"),
+    bossTheme = audio.loadStream("sound/BossTheme.wav"),
 }
 
 return soundTable;

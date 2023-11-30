@@ -416,6 +416,8 @@ function scene:show( event )
          Boss:move()
          Boss:createHealthBar(sceneGroup)
          sceneGroup:insert(Boss.shape)
+         audio.stop()
+         audio.play( soundTable["bossTheme"], {loops = -1, fadein = 5000} );
 
          local function fireBoss()
             if (gameRunning) then
