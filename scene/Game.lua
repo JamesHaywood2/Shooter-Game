@@ -137,6 +137,7 @@ function scene:create( event )
             event.other = nil;
             audio.play( soundTable["hurtSound"] );
             playerHP = playerHP - 1;
+            updateHealthBar(healthBar,playerHP)
             --Play a sound when the player is hit.
          end
          --Can include other collision events here.
@@ -279,6 +280,24 @@ function scene:create( event )
    congratsText:toFront();
    sceneGroup:insert( congratsText )
    congratsText.isVisible = false;
+
+   -- Player Health Bar
+   backBar = display.newRect(display.contentCenterX-70, 25,playerHP * 25,30)
+   backBar:setFillColor(1,1,1,0.5)
+   backBar:setStrokeColor(1,1,1)
+   backBar.strokeWidth = 2
+   sceneGroup:insert(backBar)
+
+   healthBar = display.newRect(display.contentCenterX-70, 25,playerHP * 25,30)
+   healthBar:setFillColor(1,0,0,1)
+   healthBar:setStrokeColor(1,1,1,0.5)
+   healthBar.strokeWidth = 3
+   sceneGroup:insert(healthBar)
+
+   function updateHealthBar()
+      healthBar.width = playerHP * 25
+      healthBar.x = healthBar.x - 25/2
+   end
 
    local killZoneCollisionFilter = { categoryBits = 16, maskBits = 14 }
 
