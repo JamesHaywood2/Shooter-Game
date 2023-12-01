@@ -23,7 +23,7 @@ function scene:create( event )
    local titleText = display.newText( "Shooter Game", display.contentCenterX, display.contentCenterY - 100, native.systemFont, 75 )
    sceneGroup:insert( titleText )
    --Group member text
-   local groupText = display.newText( "James Haywood, Lillian Snoddy, Elizabeth Elgin, Adam Pruitt ", display.contentCenterX, display.contentCenterY - 50, native.systemFont, 32 )
+   local groupText = display.newText( "James Haywood, Lillian Snoddy, Elisabeth Elgin, Adam Pruitt ", display.contentCenterX, display.contentCenterY - 50, native.systemFont, 32 )
    sceneGroup:insert( groupText )
    --Add start button
    ButtonCounter = 0;
