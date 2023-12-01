@@ -38,9 +38,6 @@ function scene:create( event )
       height = 100,
       cornerRadius = 25,
       onEvent = function(event)
-         -- if (event.phase == "ended") then
-         --    composer.gotoScene("scene.Game");
-         -- end
          if (event.phase == "began") then 
             ButtonCounter = 1;
          elseif (event.phase == "ended") then

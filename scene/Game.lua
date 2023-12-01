@@ -5,18 +5,13 @@ local soundTable = require("soundTable")
 local Plane = require("objects.Enemy_1")
 local JetpackFish = require("objects.Enemy_2")
 local fish = require("objects.Boss")
-
-
 physics.start()
 physics.setGravity(0,0);
  
---physics.setDrawMode('hybrid');
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
 -- unless "composer.removeScene()" is called.
 ---------------------------------------------------------------------------------
- 
--- local forward references should go here
 
 --idk if this is exactly necessary/works the way I think it does, but I'm making every global variable local to the scene.
 --What I think this means is when you leave the scene (exit scope), all the variables should be destroyed.
@@ -102,14 +97,8 @@ function scene:create( event )
    ---- Main Player
    playerHP = 5;
 
-   --This is the old way of doing it. Just a circle to represent the player character.
-   -- PC = display.newCircle (75, display.contentCenterY, 25);
-
    --This is the new way of doing it. Makes the PC a space ship.
    local shipOpt = { frames = {
-         --Unscaled
-         -- {x=144, y=0, width=16, height=15}, --Ship 1: White facing right
-         -- {x=144, y=24, width=16, height=15}, --Ship 2: White facing left
          --Scaled
          {x=576, y=0, width=64, height=60}, --Ship 1: White facing right
          {x=576, y=96, width=64, height=60}, --Ship 2: White facing left
@@ -124,7 +113,6 @@ function scene:create( event )
    PC.x = 75;
    PC.y = display.contentCenterY;
    
-
    local pcCollisionFilter = { categoryBits = 1, maskBits = 12 }
    PC.tag = "player";
    physics.addBody (PC, "dynamic", {isSensor=true, filter=pcCollisionFilter}); --I made it a sensor because collision with enemies was moving it. - James
@@ -352,8 +340,6 @@ function scene:show( event )
    local phase = event.phase
  
    if ( phase == "will" ) then
-      -- Called when the scene is still off screen (but is about to come on screen).
-
       --Reset the player's HP and score.
       playerHP = 5;
       composer.setVariable("Score", 0);
@@ -427,7 +413,6 @@ function scene:show( event )
          bossTimer = timer.performWithDelay(1.75E3,fireBoss,-1) -- Boss will fire every second
       end
       bossTimer = timer.performWithDelay(120E3,enterBoss,1) -- Boss will only enter once
-      --bossTimer = timer.performWithDelay(5000,enterBoss,1) -- to test boss functionality
 
    end
 end
@@ -530,11 +515,6 @@ local function moveBg(dt)
    local function move(bg, scrollSpeed)
       bg.x = bg.x + -scrollSpeed * dt
 
-      --If the background image has moved far enough to the right, move it back to the left side.
-      -- if (bg.x - display.contentWidth/2.5) > display.actualContentWidth then
-      --    bg:translate(-bg.contentWidth * 2.8 , 0)
-      -- end
-
       --If background has moved far enough to the left, move it back to the right side.
       if (bg.x + 2*(display.contentWidth/2.5)) < 0 then
          bg:translate(bg.contentWidth*2.8,0);
@@ -570,9 +550,6 @@ function enterFrame()
 
    end
 
-   --Print enemy table size
-   -- print("Enemy table size: " .. #enemyTable)
-
    local bossDefeated = composer.getVariable("bossDefeated")
 
    --If the player's HP is 0, display the game over text.
@@ -598,16 +575,6 @@ function enterFrame()
       end
       gameRunning = false;
 
-
-      --Originally upon a game over/win the player would just be made invisible, but not be deleted. You would then go back to the title screen.
-      --Upon starting again, the player would be made visible again. Nothing ever really god deleted, just reset.
-      --NOW, the scene should be getting deleted, so the player can be deleted too.
-
-      --Make the player disappear.
-      -- PC.isVisible = false;
-
-
-      
       --If you tap the screen in this state, it should go back to the title screen.
       --Same method should work for the boss kill.
       local function goBackToTitle(event)

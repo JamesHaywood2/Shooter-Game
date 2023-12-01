@@ -77,7 +77,6 @@ function Enemy:hit ()
 		-- die
 		self.shape:removeSelf();
 		self.shape=nil;	
-		--self = nil;
     
     --Increase score
     composer.setVariable( "Score", composer.getVariable( "Score" ) + 100 )

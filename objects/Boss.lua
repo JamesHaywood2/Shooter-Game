@@ -1,12 +1,9 @@
--- Project Description says that the Boss is supposed to extend functionality of Enemy class
--- I'm not 100% sure what that means so I'm just doing this for now -- Lilli
 local Enemy = require("objects.Enemy_Base");
 local soundTable=require("soundTable");
 local composer = require("composer");
 local physics = require("physics");
 
 local Boss = Enemy:new( {HP=30} );
-
 
 --The variable 'fish' contains every display object that makes up the fish    
 
@@ -58,8 +55,6 @@ function Boss:spawn()
     self.shape.y = display.contentCenterY
     local scaleFactor = 2.5;
     self.shape:scale(scaleFactor, scaleFactor)
-    -- self.shape.xScale = 2.5
-    -- self.shape.yScale = 2.5
 
     --Add the mouth
     mouth = display.newSprite(self.shape, fishSheet, fishSeqData)
@@ -97,9 +92,6 @@ function Boss:spawn()
 
     self.shape.pp = self;
     self.shape.tag = "enemy";
-
-
-    --(fishOpt.frames[14].width*scaleFactor)/2
 
     --Hitbox shape
     local snout = {halfWidth = 80, halfHeight=20, x=-200, y=23}
@@ -147,7 +139,6 @@ function Boss:hit()
 		-- die
 		self.shape:removeSelf();
 		self.shape=nil;	
-		--self = nil;
 
         -- Acknowledge boss has been destroyed
         composer.setVariable("bossDefeated",true);
@@ -155,14 +146,14 @@ function Boss:hit()
         bossHealthBar:removeSelf()
         bossHealthTxt:removeSelf()
 
-        --increase score
+        --Increase score
         composer.setVariable( "Score", composer.getVariable( "Score" ) + 10E3 )
 
         return 1;
 	end		
 end
 
-
+-- Prepare image sheet for projectiles
 local projectileOpt = { frames = {
     {x = 25, y = 18, width = 137, height = 67},
     {x = 195, y = 44, width = 75, height = 36},
@@ -178,7 +169,6 @@ local projectileSeq = {
     {name = "arc", frames = {4}},
     {name = "redFireball", frames = {5}},
 }
-
 
 function Boss:fireProjectile(sceneGroup, playerX, playerY)
     local function playerDirection(playerX, playerY)
@@ -276,7 +266,6 @@ function Boss:removeHealthBar(sceneGroup)
         bossHealthBar:removeSelf()
         bossHealthTxt:removeSelf()
     end
-
 end
 
 function Boss:UpdateHealthBar(obj, HP)
