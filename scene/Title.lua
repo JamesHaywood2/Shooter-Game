@@ -49,6 +49,10 @@ function scene:create( event )
       end
    })
    sceneGroup:insert( startButton )
+
+   --Instruction text
+   local instructionText = display.newText( "Use control bar to move.\nTap or press 'f' to fire.", display.contentCenterX, display.contentCenterY + 200, native.systemFont, 32 )
+   sceneGroup:insert( instructionText )
 end
  
 -- "scene:show()"

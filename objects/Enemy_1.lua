@@ -1,7 +1,7 @@
 local Enemy = require("objects.Enemy_Base");
 local physics = require("physics");
 
-local Plane = Enemy:new( {HP=2, fR=720, fT=700, bT=700} );
+local Plane = Enemy:new( {HP=2} );
 
 local spriteOpt = {frames={
   {x = 15, y = 4, width = 221, height = 118}
@@ -37,7 +37,7 @@ end
 --Will add velocity to the Plane in the -x direction
 function Plane:move()
     --speed should be like 150 - 250??
-    local speed = 200;
+    local speed = 300;
     self.shape:setLinearVelocity(-speed, 0);
 end
 

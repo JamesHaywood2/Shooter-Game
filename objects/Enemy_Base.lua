@@ -15,7 +15,6 @@ local Enemy = {tag="enemy", HP=1, xPos=0, yPos=0, fR=0, sR=0, bR=0, fT=1000, sT=
 
 MaxHP = 1;
 
-
 function Enemy:new (o)    --constructor
   o = o or {}; 
   setmetatable(o, self);

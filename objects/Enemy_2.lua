@@ -46,7 +46,7 @@ function JetpackFish:move(playerX, playerY)
     local yUnit = yDist/dist;
 
     --Set the velocity of the enemy to the unit vector * speed
-    local speed = 200;
+    local speed = 250;
     self.shape:setLinearVelocity(xUnit*speed, yUnit*speed);
 end
 

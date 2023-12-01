@@ -44,8 +44,7 @@ function scene:create( event )
    -- Example: add display objects to "sceneGroup", add touch listeners, etc.
 
    gameRunning = false;
-
-   enemyTable = {}
+   enemyTable = {}; --Table to hold all the enemies.
 
    --Boss object
    Boss = fish:new({xPos=display.contentCenterX, yPos=display.contentCenterY})
@@ -56,14 +55,12 @@ function scene:create( event )
    sceneGroup:insert( bgGroup )
    runtime = 0
    scrollSpeed = 1.4 --1.4
-
-   bgS1 = nil
-   bgS2 = nil
-   bgS3 = nil
    scrollSpeed2 = 5
 
+   --Add the scrolling background
    function addScrollableBg()
       --Again this just condenses the code. I think it makes it a little easier to read. - James
+      --Makes a rectangle at xPos and then sets the fill to image. Then adds it to bgGroup.
       local function makeBG(image, xPos)
          local bg = display.newRect(0, 0, display.contentWidth, display.actualContentHeight)
          bgGroup:insert(bg)
@@ -72,7 +69,8 @@ function scene:create( event )
          bg.y = display.contentCenterY
          return bg
       end
-   
+      
+      --bg is the farback background. Should be in the very back.
       local bgImage = { type="image", filename="farback.png" }
       --Add first bg image in the center
       bg1 = makeBG(bgImage, display.contentCenterX)
@@ -81,6 +79,7 @@ function scene:create( event )
       --Add third bg image. This should be in front of the first one
       bg3 = makeBG(bgImage, display.contentCenterX + display.actualContentWidth - 250)
    
+      --bgS is the starfield background. In front of the farback background, but behind everything else.
       local bgImage2 = { type="image", filename="starfield.png" }
       --Add first bg image in the center
       bgS1 = makeBG(bgImage2, display.contentCenterX)
@@ -91,17 +90,18 @@ function scene:create( event )
    end
 
    addScrollableBg()
+   --Adds the enterFrame function to the Runtime event listener. This is the main game loop and should be called every frame.
    Runtime:addEventListener("enterFrame", enterFrame)
 
    --Add player character
    ---- Main Player
    playerHP = 5;
 
-   --This is the new way of doing it. Makes the PC a space ship.
+   --PC sprites. Uses the galaga ship sprites. One is white, the other is red.
    local shipOpt = { frames = {
          --Scaled
          {x=576, y=0, width=64, height=60}, --Ship 1: White facing right
-         {x=576, y=96, width=64, height=60}, --Ship 2: White facing left
+         {x=576, y=96, width=64, height=60}, --Ship 2: red facing right
       }}
    local shipSheet = graphics.newImageSheet("Galaga_Ship_Scaled.png", shipOpt)
    local shipSeqData = {
@@ -110,18 +110,19 @@ function scene:create( event )
    }
    PC = display.newSprite(shipSheet, shipSeqData)
    PC:setSequence("ship2")
-   PC.x = 75;
+   PC.x = 75; --Puts ship right outside the control bar.
    PC.y = display.contentCenterY;
    
-   local pcCollisionFilter = { categoryBits = 1, maskBits = 12 }
+   local pcCollisionFilter = { categoryBits = 1, maskBits = 12 } -- Can collide with Enemy and EnemyProjectile
    PC.tag = "player";
-   physics.addBody (PC, "dynamic", {isSensor=true, filter=pcCollisionFilter}); --I made it a sensor because collision with enemies was moving it. - James
+   physics.addBody (PC, "dynamic", {isSensor=true, filter=pcCollisionFilter});
    --If an enemy collides with the player, enemy should be removed and player should lose 1 HP.
    local function onLocalCollision( self, event )
       if (event.phase == "began") then
          -- print("Collision with player")
          if (event.other.tag == "enemy") then
             audio.play( soundTable["hurtSound"] );
+            --If the enemy hits the player, the enemy needs to be removed from the enemy table.
             local indexOfEnemy = table.indexOf(enemyTable, event.other)
             table.remove(enemyTable, indexOfEnemy)
             event.other:removeSelf();
@@ -179,12 +180,13 @@ function scene:create( event )
    -- Projectile
    local projectileOpt = { frames = {
       {x = 225, y = 136, width = 96, height = 39},
-    }}
-  local projectileSheet = graphics.newImageSheet("objects/Projectiles.png", projectileOpt)
-  local projectileSeq = {
+   }}
+   local projectileSheet = graphics.newImageSheet("objects/Projectiles.png", projectileOpt)
+   local projectileSeq = {
       {name = "redFireball", frames = {1}},
-  }
+   }
 
+  --Creates a sprite object for the projectile and returns it.
   local function createProjectile(xScale, yScale)
       xScale = xScale or 1
       yScale = yScale or 1
@@ -214,12 +216,13 @@ function scene:create( event )
    
             local function removeProjectile (event)
                if (event.phase=="began") then
+                  --When the projectile hits an object remove it.
                   event.target:removeSelf();
                   event.target=nil;
                   cnt = cnt - 1;
                   --If the projectile hits an enemy, trigger the enemy's hit function.
                   if (event.other.tag == "enemy") then
-                     local isDead = event.other.pp:hit();
+                     local isDead = event.other.pp:hit(); --The enemy hit function returns 1 if the enemy died.
                      if (isDead == 1) then
                         local indexOfEnemy = table.indexOf(enemyTable, event.other)
                         table.remove(enemyTable, indexOfEnemy)
@@ -234,7 +237,7 @@ function scene:create( event )
       end
       return false;
    end
-   Runtime:addEventListener("tap", fire)
+   Runtime:addEventListener("tap", fire) --If the player taps the screen a projectile will be fired
 
    --I added this to make it easier to fire. - James
    function KeyHandler( event )
@@ -244,9 +247,11 @@ function scene:create( event )
          elseif (event.keyName == "up") then
             print("HP UP: " .. playerHP .. " -> " .. playerHP + 1)
             playerHP = playerHP + 1;
+            updateHealthBar(healthBar,playerHP)
          elseif (event.keyName == "down") then
             print("HP DOWN: " .. playerHP .. " -> " .. playerHP - 1)
             playerHP = playerHP - 1;
+            updateHealthBar(healthBar,playerHP)
          end
       end
 
@@ -287,7 +292,8 @@ function scene:create( event )
    backBar.strokeWidth = 2
    sceneGroup:insert(backBar)
 
-   healthBar = display.newRect(display.contentCenterX-70, 25,playerHP * 25,30)
+   healthBar = display.newRect(display.contentCenterX-132, 25,playerHP * 25,30)
+   healthBar.anchorX = 0
    healthBar:setFillColor(1,0,0,1)
    healthBar:setStrokeColor(1,1,1,0.5)
    healthBar.strokeWidth = 3
@@ -295,10 +301,9 @@ function scene:create( event )
 
    function updateHealthBar()
       healthBar.width = playerHP * 25
-      healthBar.x = healthBar.x - 25/2
    end
 
-   local killZoneCollisionFilter = { categoryBits = 16, maskBits = 14 }
+   local killZoneCollisionFilter = { categoryBits = 16, maskBits = 14 } --Can interact with PCBullet, Enemy, and EnemyProjectile
 
    --Add kill zones for projectiles and enemies
    --Wall off the screen to the right.
@@ -329,6 +334,8 @@ function scene:create( event )
    killZoneL.collision = onLocalCollision;
    killZoneL:addEventListener( "collision" );
 
+   --The only killzone that actually does anything on collision is the left one as it actively removes things. The right one is just there so the bullets have something to hit and destroy themselves.
+
    composer.setVariable("bossDefeated",false);
 
    
@@ -340,8 +347,13 @@ function scene:show( event )
    local phase = event.phase
  
    if ( phase == "will" ) then
+      --Originally Game.lua would still exist in the background upon a game reset. This code is there to reset the game state.
+      --This has been changed so that the scene is destroyed and then recreated upon a game reset which makes some code here redundent.
+      --It is kept here just in case It's actually necessary for some reason. - James
+
       --Reset the player's HP and score.
       playerHP = 5;
+      --These two are actually necessary because they're composer variables.
       composer.setVariable("Score", 0);
       composer.setVariable("bossDefeated",false);
 
@@ -351,27 +363,26 @@ function scene:show( event )
       --PC should be visible.
       PC.isVisible = true;
 
-
    elseif ( phase == "did" ) then
       -- Called when the scene is now on screen.
       -- Insert code here to make the scene come alive.
       -- Example: start timers, begin animation, play audio, etc.
-      audio.play( soundTable["backgroundSound"], {loops = -1, fadein = 5000} );
+      audio.play( soundTable["backgroundSound"], {loops = -1, fadein = 5000} ); --play background music
       gameRunning = true;
       --Start the updater
       Runtime:addEventListener("enterFrame", enterFrame)
 
       --Spawn enemies
       local function spawnEnemies()
+         --1-2 enemies randomly spawn every 3 seconds.
          local spawnNum = math.random(1,2)
          local prevY = 0
          for i=1, spawnNum do
             local RNG = math.random();
             local enemy = nil;
-            --new random seed
             local xPos = display.actualContentWidth+50;
             local yPos = math.random(50, display.actualContentHeight-50);
-            --If new yPosition causes enemy to spawn too close to previous enemy, generate new yPosition
+            --If two enemies spawn too close together it will generate a new y position for the second one until they are far enough away.
             if (i > 1) then
                while (math.abs(yPos - prevY) < 50) do
                   yPos = math.random(50, display.actualContentHeight-50);
@@ -392,9 +403,8 @@ function scene:show( event )
          end
 
       end
-      spawnTimer = timer.performWithDelay(3E3,spawnEnemies,-1) -- Spawn regular intervals, doesn't stop
+      spawnTimer = timer.performWithDelay(3E3,spawnEnemies,-1) -- Spawn regular intervals, doesn't stop execpt when boss enters or game end.
 
-      
       -- Boss will enter after two mintues of playing
       function enterBoss()
          timer.cancel(spawnTimer)
@@ -428,8 +438,8 @@ function scene:hide( event )
       -- Insert code here to "pause" the scene.
       -- Example: stop timers, stop animation, stop audio, etc.
 
+      --Effectively stops the game. Physic objects will still exist/move, but nothing really gets updated. 
       gameRunning = false;
-      --Stop the updater
       Runtime:removeEventListener("enterFrame", enterFrame)
 
       --Cancel the spawn timer
@@ -470,6 +480,8 @@ function scene:destroy( event )
    -- Insert code here to clean up the scene.
    -- Example: remove display objects, save state, etc.
 
+   --This should remove all the objects from the scene?
+
    --Remove all event listeners
    Runtime:removeEventListener("enterFrame", enterFrame)
    Runtime:removeEventListener("tap", fire)
@@ -509,18 +521,19 @@ scene:addEventListener( "destroy", scene )
  
 ---------------------------------------------------------------------------------
 
-
+--Function in charge of moving the parallax background
 local function moveBg(dt)
-   --This just condenses code and makes it easier to read imo - James.
+   --Just takes the background, and if it's moved far enough to the left, moves it back to the right side.
    local function move(bg, scrollSpeed)
       bg.x = bg.x + -scrollSpeed * dt
 
       --If background has moved far enough to the left, move it back to the right side.
-      if (bg.x + 2*(display.contentWidth/2.5)) < 0 then
-         bg:translate(bg.contentWidth*2.8,0);
+      if (bg.x < -display.actualContentWidth + 250) then
+         bg:translate(display.actualContentWidth*3 - 750, 0)
       end
    end
 
+   --Move all the backgrounds
    move(bg1, scrollSpeed)
    move(bg2, scrollSpeed)
    move(bg3, scrollSpeed)
@@ -530,6 +543,7 @@ local function moveBg(dt)
    move(bgS3, scrollSpeed2)
 end
 
+--Gets the delta time (time since last frame) and returns it.
 function getDeltaTime()
    local temp = system.getTimer()
    local dt = (temp-runtime) / (1000/60)
@@ -537,8 +551,10 @@ function getDeltaTime()
    return dt
 end
 
---This gets called every frame. Use this as the main game loop I guess.
+--This gets called every frame. Acts as main game loop.
 function enterFrame()
+
+   --There may be a slight bug where if you die and kill the boss in the same frame you'll still win.
    
    if (gameRunning) then
       local dt = getDeltaTime()
@@ -549,7 +565,7 @@ function enterFrame()
       HPText.text = "HP: " .. playerHP
 
    end
-
+   --Composer variable is put into a local variable each frame so it doesn't change mid frame.
    local bossDefeated = composer.getVariable("bossDefeated")
 
    --If the player's HP is 0, display the game over text.
@@ -579,7 +595,7 @@ function enterFrame()
       --Same method should work for the boss kill.
       local function goBackToTitle(event)
          if (event.phase == "began") then
-            Runtime:removeEventListener("touch", goBackToTitle)
+            Runtime:removeEventListener("touch", goBackToTitle) --Remove the event listener after it's been triggered.
             composer.gotoScene("scene.Title");
             print("Going to title");
             --Destroy the game scene.

@@ -35,6 +35,7 @@ function Boss:spawn()
     --Image sheet for fish
     local fishSheet = graphics.newImageSheet("objects/KingBayonet.png",fishOpt)
 
+    --Sequence data for the fish. Includes animations which we could have added, but didn't.
     local fishSeqData = {
         {name = "mouthOn",start=5,count=3,time=1000,loopCount=1},
         {name = "snoutOn", frames={2,3,4},time=500,loopCount=1},
@@ -128,6 +129,7 @@ function Boss:hit()
         bossHealthTxt.text = "Boss HP: "..self.HP
         return 0;
 	else 
+        --boss dead
 		audio.play( soundTable["bossDeath"] );
         transition.cancel( self.shape );
         transition.cancel(movingTimer)
@@ -170,7 +172,9 @@ local projectileSeq = {
     {name = "redFireball", frames = {5}},
 }
 
+--Creates projectiles and then fires them
 function Boss:fireProjectile(sceneGroup, playerX, playerY)
+    --Gets the unit vector between the player and the boss
     local function playerDirection(playerX, playerY)
         local xDist = playerX - self.shape.x;
         local yDist = playerY - self.shape.y;
@@ -180,6 +184,7 @@ function Boss:fireProjectile(sceneGroup, playerX, playerY)
         return xUnit, yUnit
     end
 
+    --Creates the projectile and applies the proper sprite and values
     local function createProjectile(sequence, xScale, yScale)
         --Default values
         sequence = sequence or "blueFireball1"
@@ -201,7 +206,7 @@ function Boss:fireProjectile(sceneGroup, playerX, playerY)
         return projectile
     end
 
-    --Generate a random number between 1 and 3 to determine which projectile to fire
+    --Generate a random number between 1 and 100 to determine which projectile to fire
     local projectileType = math.random(1,100);
     --Fire the projectile
     if (projectileType <= 25) then
@@ -235,7 +240,7 @@ function Boss:fireProjectile(sceneGroup, playerX, playerY)
 
         audio.play( soundTable["threeShot"] );
     elseif (projectileType > 90 and projectileType <= 100) then
-        --20% chance to fire an wide arc
+        --10% chance to fire an wide arc
         local projectile = createProjectile("arc", 1, 2)
         projectile:setLinearVelocity(-200, 0);
         audio.play( soundTable["slashSound"] );
@@ -250,7 +255,8 @@ function Boss:createHealthBar(sceneGroup)
     bossBackBar:setStrokeColor(1,1,1)
     bossBackBar.strokeWidth = 2
 
-    bossHealthBar = display.newRect(display.contentCenterX+125, display.actualContentHeight-25,30*25,20)
+    bossHealthBar = display.newRect(display.contentCenterX-250, display.actualContentHeight-25,30*25,20)
+    bossHealthBar.anchorX = 0
     bossHealthBar:setFillColor(1,0,0,1)
     bossHealthBar:setStrokeColor(1,1,1,0.5)
     bossHealthBar.strokeWidth = 3
@@ -270,7 +276,6 @@ end
 
 function Boss:UpdateHealthBar(obj, HP)
     obj.width = HP * 25
-    obj.x = obj.x - 25/2
 end
 
 return Boss;
