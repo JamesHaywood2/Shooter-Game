@@ -1,2 +1,2 @@
 # Shooter-Game-
-CS 371 term project eam 6
+CS 371 term project team 6
